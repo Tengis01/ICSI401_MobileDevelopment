@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">Хөрвүүлэгч</string>
+
+    <!-- Main Screen -->
+    <string name="search_unit">Нэгж хайх</string>
+
+    <!-- Categories (6 only) -->
+    <string name="urt">Урт</string>
+    <string name="talbai">Талбай</string>
+    <string name="jin">Жин</string>
+    <string name="hugatsaa">Хугацаа</string>
+    <string name="hurd">Хурд</string>
+    <string name="temperatur">Температур</string>
+
+    <!-- Converter Screen -->
+    <string name="from">-аас:</string>
+    <string name="to">-руу:</string>
+    <string name="input_data">Оруулах утга:</string>
+    <string name="output_data">Гарах утга:</string>
+    <string name="input_hint">1000</string>
+    <string name="result">Хөрвүүлэх</string>
+    <string name="result_format">Үр дүн: %1$s %2$s = %3$s %4$s</string>
+
+    <!-- Length Units -->
+    <string name="meter">Метр</string>
+    <string name="kilometer">Километр</string>
+    <string name="centimeter">Сантиметр</string>
+    <string name="millimeter">Миллиметр</string>
+    <string name="inch">Инч</string>
+    <string name="foot">Фут</string>
+    <string name="yard">Ярд</string>
+    <string name="mile">Майл</string>
+
+    <!-- Mass Units -->
+    <string name="kilogram">Килограмм</string>
+    <string name="gram">Грамм</string>
+    <string name="pound">Фунт</string>
+    <string name="ounce">Унц</string>
+    <string name="ton">Тонн</string>
+
+    <!-- Temperature Units -->
+    <string name="celsius">Цельс</string>
+    <string name="fahrenheit">Фаренгейт</string>
+    <string name="kelvin">Кельвин</string>
+
+    <!-- Time Units -->
+    <string name="second">Секунд</string>
+    <string name="minute">Минут</string>
+    <string name="hour">Цаг</string>
+    <string name="day">Өдөр</string>
+    <string name="week">7 хоног</string>
+    <string name="month">Сар</string>
+    <string name="year">Жил</string>
+
+    <!-- Speed Units -->
+    <string name="meter_per_second">м/с</string>
+    <string name="kilometer_per_hour">км/ц</string>
+    <string name="mile_per_hour">mph</string>
+    <string name="knot">Зангилаа</string>
+
+    <!-- Area Units -->
+    <string name="square_meter">м²</string>
+    <string name="square_kilometer">км²</string>
+    <string name="square_foot">фут²</string>
+    <string name="square_inch">инч²</string>
+    <string name="hectare">Гектар</string>
+    <string name="acre">Акр</string>
+
+    <!-- Messages -->
+    <string name="enter_value">Утга оруулна уу</string>
+    <string name="invalid_input">Буруу утга</string>
+    <string name="conversion_error">Хөрвүүлэлт амжилтгүй</string>
+</resources>

@@ -1,14 +1,8 @@
-# Gradle
-.gradle/
-build/
+**/.idea/
+**/local.properties
+**/.gradle/
 **/build/
-
-# Local config (machine-specific)
-local.properties
-
-# Android Studio
-.idea/
-*.iml
+**.iml
 
 # OS generated
 .DS_Store
