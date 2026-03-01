@@ -1,0 +1,36 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Local config (machine-specific)
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Keystore (хэрвээ гарын үсэг зурж байвал)
+*.jks
+*.keystore
+
+# Log files
+*.log
+
+# Kotlin
+.kotlin/
+
+# Generated files
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Firebase (хэрвээ ашиглавал)
+google-services.json
+
+# NDK
+obj/

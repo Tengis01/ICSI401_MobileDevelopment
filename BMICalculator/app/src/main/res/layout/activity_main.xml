@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/c_bg"
+    android:fillViewport="true">
+
+    <!--
+        fillViewport="true" + match_parent хослол:
+        - Дэлгэцэд багтвал → ConstraintLayout дэлгэцийн өндөртэй тэнцүү болно
+        - Багтахгүй бол → ScrollView автоматаар идэвхжинэ
+    -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
+
+        <!--
+            VERTICAL CHAIN — CSS justify-content: space-between-тэй адил
+            Ажиллах зарчим:
+              tvTitle   ← chain эхлэл (chainStyle тавих газар)
+                ↕
+              cardMale / cardFemale
+                ↕
+              cardHeight
+                ↕
+              cardAge / cardWeight
+                ↕
+              btnCalculate  ← chain төгсгөл → bottom to parent
+
+            chainStyle="spread_inside":
+              - Эхний болон сүүлийн элемент хил дээр наалдана
+              - Дундын элементүүдийн хооронд тэнцүү зай үүснэ
+        -->
+
+        <!-- ① TITLE — chain-ийн эхлэл -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Биеийн жингийн индекс тооцоологч"
+            android:textSize="18sp"
+            android:maxLines="2"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/cardMale"
+            app:layout_constraintVertical_chainStyle="spread_inside"/>
+
+        <!-- ② MALE CARD -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardMale"
+            android:layout_width="0dp"
+            android:layout_height="120dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:strokeWidth="2dp"
+            app:strokeColor="@color/c_primary"
+            app:cardBackgroundColor="@color/c_selected_tint"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle"
+            app:layout_constraintBottom_toTopOf="@id/cardHeight"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/cardFemale"
+            app:layout_constraintWidth_percent="0.48">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="12dp">
+                <TextView
+                    android:id="@+id/tvMale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Эрэгтэй"
+                    android:textColor="@color/c_text"
+                    android:textSize="16sp"/>
+                <FrameLayout
+                    android:id="@+id/maleIconHolder"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ② FEMALE CARD (cardMale-тай ижил мөрт, chain-д оролцохгүй) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardFemale"
+            android:layout_width="0dp"
+            android:layout_height="120dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/c_primary"
+            app:cardBackgroundColor="@color/c_surface"
+            app:layout_constraintTop_toTopOf="@id/cardMale"
+            app:layout_constraintBottom_toBottomOf="@id/cardMale"
+            app:layout_constraintStart_toEndOf="@id/cardMale"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_percent="0.48">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="12dp">
+                <TextView
+                    android:id="@+id/tvFemale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Эмэгтэй"
+                    android:textColor="@color/c_text"
+                    android:textSize="16sp"/>
+                <FrameLayout
+                    android:id="@+id/femaleIconHolder"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ③ HEIGHT CARD -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardHeight"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/c_surface"
+            app:layout_constraintTop_toBottomOf="@id/cardMale"
+            app:layout_constraintBottom_toTopOf="@id/cardAge"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Өндөр (Сантиметр)"
+                    android:textColor="@color/c_text"
+                    android:textSize="14sp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:includeFontPadding="false"/>
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_height_box"
+                    android:padding="8dp"
+                    android:clipToOutline="true">
+                    <NumberPicker
+                        android:id="@+id/npHeight"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center" />
+                </FrameLayout>
+                <TextView
+                    android:id="@+id/tvHeightInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Таны өндөр: 160см"
+                    android:textColor="@color/c_text"
+                    android:textSize="14sp"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ④ AGE CARD -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardAge"
+            android:layout_width="0dp"
+            android:layout_height="120dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/c_border"
+            app:cardBackgroundColor="@color/c_surface"
+            app:layout_constraintTop_toBottomOf="@id/cardHeight"
+            app:layout_constraintBottom_toTopOf="@id/btnCalculate"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/cardWeight"
+            app:layout_constraintWidth_percent="0.48">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="14dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Нас"
+                    android:textColor="@color/c_text"
+                    android:textSize="14sp"
+                    android:layout_gravity="center"/>
+                <EditText
+                    android:id="@+id/etAge"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:inputType="number"
+                    android:background="@android:color/transparent"
+                    android:textColor="@color/c_muted"
+                    android:textSize="24sp"
+                    android:hint="25"
+                    android:textAlignment="center"/>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:background="@color/c_accent"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ④ WEIGHT CARD (cardAge-тай ижил мөрт) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardWeight"
+            android:layout_width="0dp"
+            android:layout_height="120dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/c_border"
+            app:cardBackgroundColor="@color/c_surface"
+            app:layout_constraintTop_toTopOf="@id/cardAge"
+            app:layout_constraintBottom_toBottomOf="@id/cardAge"
+            app:layout_constraintStart_toEndOf="@id/cardAge"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_percent="0.48">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="14dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Жин (Кг)"
+                    android:textColor="@color/c_text"
+                    android:textSize="14sp"
+                    android:layout_gravity="center"/>
+                <EditText
+                    android:id="@+id/etWeight"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:background="@android:color/transparent"
+                    android:textColor="@color/c_muted"
+                    android:textSize="24sp"
+                    android:hint="65"
+                    android:textAlignment="center"/>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:background="@color/c_accent"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ⑤ BUTTON — chain-ийн төгсгөл, доод хилд наалдана -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCalculate"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:text="Тооцоолох"
+            android:textAllCaps="false"
+            android:textColor="@color/c_surface"
+            app:cornerRadius="16dp"
+            android:backgroundTint="@color/c_primary"
+            app:layout_constraintTop_toBottomOf="@id/cardAge"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

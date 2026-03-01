@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="c_primary">#2f6f62</color>
+    <color name="c_primary_dark">#24584e</color>
+    <color name="c_accent">#e7b84b</color>
+    <color name="c_bg">#f7f5f0</color>
+    <color name="c_surface">#ffffff</color>
+    <color name="c_border">#e7e2d9</color>
+    <color name="c_text">#1b1f1e</color>
+    <color name="c_muted">#6b6f6e</color>
+    <color name="c_selected_tint">#e6f1ee</color>
+</resources>
