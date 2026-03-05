@@ -84,9 +84,17 @@
                     android:textSize="16sp"/>
                 <FrameLayout
                     android:id="@+id/maleIconHolder"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="10dp"/>
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="10dp">
+
+                    <ImageView
+                        android:id="@+id/ivMale"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"
+                        android:src="@mipmap/ic_malepng" />
+                </FrameLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -120,9 +128,17 @@
                     android:textSize="16sp"/>
                 <FrameLayout
                     android:id="@+id/femaleIconHolder"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="10dp"/>
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="10dp">
+
+                    <ImageView
+                        android:id="@+id/ivFemale"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"
+                        android:src="@mipmap/ic_femalepng" />
+                </FrameLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

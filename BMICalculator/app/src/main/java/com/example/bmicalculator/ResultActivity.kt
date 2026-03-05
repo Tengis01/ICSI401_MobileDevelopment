@@ -32,14 +32,4 @@ class ResultActivity : AppCompatActivity() {
             finish()
         }
     }
-
-//    private fun getCategoryColor(category: String): Int {
-//        return when (category) {
-//            "Хэвийн" -> getColor(R.color.c_primary)
-//            "Илүүдэл жинтэй" -> getColor(R.color.c_accent)
-//            "Жингийн дутагдалтай" -> getColor(R.color.c_error)
-//            "Таргалалттай" -> getColor(R.color.c_error)
-//            else -> getColor(R.color.c_text)
-//        }
-//    }
 }

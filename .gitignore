@@ -1,30 +1,10 @@
 **/.idea/
-**/local.properties
+**/*.iml
 **/.gradle/
 **/build/
-**.iml
-
-# OS generated
+**/local.properties
+**/.kotlin/
+**/.cxx/
+**/.externalNativeBuild/
 .DS_Store
 Thumbs.db
-
-# Keystore (хэрвээ гарын үсэг зурж байвал)
-*.jks
-*.keystore
-
-# Log files
-*.log
-
-# Kotlin
-.kotlin/
-
-# Generated files
-captures/
-.externalNativeBuild/
-.cxx/
-
-# Firebase (хэрвээ ашиглавал)
-google-services.json
-
-# NDK
-obj/
