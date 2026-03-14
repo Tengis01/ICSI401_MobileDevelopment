@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/shape_dialog_bg"
+    android:padding="20dp">
+
+    <!-- Songogdson ognoo garchig -->
+    <TextView
+        android:id="@+id/tv_day_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/cinzel_semibold"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Tuhain odoriiin task jagsaalt -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_day_tasks"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"/>
+
+    <!-- Task baihgui bol haragdah tekst -->
+    <TextView
+        android:id="@+id/tv_day_empty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="@string/no_tasks"
+        android:fontFamily="@font/inter_regular"
+        android:textColor="@color/text_hint"
+        android:textSize="14sp"
+        android:visibility="gone"/>
+
+</LinearLayout>

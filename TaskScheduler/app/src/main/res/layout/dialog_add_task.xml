@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@color/surface_dark">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/task_title_hint"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_marginBottom="16dp">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_task_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_hint"
+            android:inputType="textCapSentences"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/select_list"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp"/>
+    <Spinner
+        android:id="@+id/spinner_list"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/card_dark"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/section_label"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp"/>
+    <Spinner
+        android:id="@+id/spinner_section"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/card_dark"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Ognoo songoh -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_pick_date"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="@string/select_date"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp"
+            app:backgroundTint="@color/accent_red"
+            android:layout_marginEnd="12dp"/>
+        <TextView
+            android:id="@+id/tv_selected_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"/>
+    </LinearLayout>
+
+    <!-- Ehleh tsag -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_pick_time"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="@string/select_time"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            app:backgroundTint="@color/card_dark"
+            android:layout_marginEnd="12dp"/>
+        <TextView
+            android:id="@+id/tv_selected_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"/>
+    </LinearLayout>
+
+    <!-- Duusah tsag -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_pick_end_time"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="@string/select_end_time"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            app:backgroundTint="@color/card_dark"
+            android:layout_marginEnd="12dp"/>
+        <TextView
+            android:id="@+id/tv_selected_end_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"/>
+    </LinearLayout>
+
+    <!-- Remind me toggle -->
+    <LinearLayout
+        android:id="@+id/ll_remind_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/remind_me"
+            android:fontFamily="@font/inter_regular"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"/>
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_remind"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:enabled="false"
+            app:thumbTint="@color/switch_thumb"
+            app:trackTint="@color/switch_track"/>
+
+    </LinearLayout>
+
+</LinearLayout>

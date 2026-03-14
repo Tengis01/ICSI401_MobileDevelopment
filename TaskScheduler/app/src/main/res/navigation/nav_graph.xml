@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/allTasksFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.taskscheduler.fragments.HomeFragment"
+        android:label="Нүүр" />
+
+    <fragment
+        android:id="@+id/allTasksFragment"
+        android:name="com.example.taskscheduler.fragments.AllTasksFragment"
+        android:label="Бүх Даалгавар" />
+
+    <fragment
+        android:id="@+id/calendarFragment"
+        android:name="com.example.taskscheduler.fragments.CalendarFragment"
+        android:label="Хуанли" />
+
+</navigation>

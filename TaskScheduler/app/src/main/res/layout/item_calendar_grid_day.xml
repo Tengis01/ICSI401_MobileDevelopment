@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
+    android:minHeight="52dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Odoriin dugaar -->
+    <TextView
+        android:id="@+id/tv_day_num"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:gravity="center"
+        android:fontFamily="@font/inter_regular"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"/>
+
+    <!-- Section ongoiin dot-uud -->
+    <LinearLayout
+        android:id="@+id/ll_dots"
+        android:layout_width="wrap_content"
+        android:layout_height="6dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="2dp">
+
+        <View
+            android:id="@+id/dot1"
+            android:layout_width="5dp"
+            android:layout_height="5dp"
+            android:layout_marginStart="1dp"
+            android:layout_marginEnd="1dp"
+            android:background="@drawable/shape_red_dot"
+            android:visibility="gone"/>
+
+        <View
+            android:id="@+id/dot2"
+            android:layout_width="5dp"
+            android:layout_height="5dp"
+            android:layout_marginStart="1dp"
+            android:layout_marginEnd="1dp"
+            android:background="@drawable/shape_red_dot"
+            android:visibility="gone"/>
+
+        <View
+            android:id="@+id/dot3"
+            android:layout_width="5dp"
+            android:layout_height="5dp"
+            android:layout_marginStart="1dp"
+            android:layout_marginEnd="1dp"
+            android:background="@drawable/shape_red_dot"
+            android:visibility="gone"/>
+
+    </LinearLayout>
+</LinearLayout>

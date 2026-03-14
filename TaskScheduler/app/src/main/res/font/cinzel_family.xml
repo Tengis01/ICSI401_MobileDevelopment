@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ЭНЭ ФАЙЛЫГ: res/font/cinzel_family.xml гэж хадгална
+  Таны font хавтсанд cinzel_semibold.ttf, inter_regular.ttf байгаа тул
+  res/font/ хавтас үүсгэж тэнд хийх хэрэгтэй.
+
+  АЛХАМ:
+  1. res дотор font гэсэн шинэ хавтас үүсгэ (New > Android Resource Directory > font)
+  2. Таны одоо байгаа font/ хавтасны .ttf файлуудыг тэнд хуулах
+  3. Дараах 2 font family файлыг үүсгэ
+-->
+
+<!-- res/font/cinzel_family.xml -->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <font
+        android:font="@font/cinzel_semibold"
+        android:fontStyle="normal"
+        android:fontWeight="600"
+        app:font="@font/cinzel_semibold"
+        app:fontStyle="normal"
+        app:fontWeight="600" />
+
+</font-family>

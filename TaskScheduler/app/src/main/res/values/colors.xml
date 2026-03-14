@@ -1,5 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Үндсэн арын өнгө -->
+    <color name="background_dark">#0D0D0D</color>
+    <color name="surface_dark">#1A1A1A</color>
+    <color name="card_dark">#1E1E1E</color>
+    <color name="card_dark_pressed">#2A2A2A</color>
+
+    <!-- Улаан accent өнгө -->
+    <color name="accent_red">#CC0000</color>
+    <color name="accent_red_light">#FF3333</color>
+    <color name="accent_red_dim">#3D0000</color>
+    <color name="dot_red">#FF0000</color>
+
+    <!-- Текст өнгө -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#AAAAAA</color>
+    <color name="text_hint">#666666</color>
+    <color name="text_strikethrough">#CC0000</color>
+
+    <!-- Bottom nav -->
+    <color name="nav_bar_bg">#111111</color>
+    <color name="nav_icon_active">#CC0000</color>
+    <color name="nav_icon_inactive">#888888</color>
+
+    <!-- Icon арын өнгө (card дотор) -->
+    <color name="icon_bg">#2D0000</color>
+
+    <!-- Хуваагч шугам -->
+    <color name="divider">#2A2A2A</color>
+
+    <!-- FAB (+ товч) -->
+    <color name="fab_red">#CC0000</color>
+
+    <!-- Transparent -->
+    <color name="transparent">#00000000</color>
+
+    <!-- Section өнгө: task-ийн зүүн мөр + spinner текст + calendar dot -->
+    <color name="section_today">#CC0000</color>
+    <color name="section_upcoming">#4CAF50</color>
+    <color name="section_someday">#FFFFFF</color>
 </resources>

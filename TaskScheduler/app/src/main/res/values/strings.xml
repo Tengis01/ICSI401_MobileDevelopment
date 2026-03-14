@@ -1,3 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TaskScheduler</string>
+    <string name="app_name">Ажил Төлөвлөгч</string>
+    <string name="nav_home">Нүүр</string>
+    <string name="nav_all_tasks">Даалгаврууд</string>
+    <string name="nav_calendar">Хуанли</string>
+    <string name="my_lists">Миний Жагсаалт</string>
+    <string name="subtitle_home">Ажлын төлөвлөгч</string>
+    <string name="all_tasks">Бүх Даалгавар</string>
+    <string name="subtitle_tasks">Бүх даалгавар</string>
+    <string name="calendar">Хуанли</string>
+    <string name="subtitle_calendar">Огноогоор харах</string>
+    <string name="section_today">ӨНӨӨДӨР</string>
+    <string name="section_upcoming">УДАХГҮЙ</string>
+    <string name="section_someday">ХЭЗЭЭ НЭГЭН ЦАГТ</string>
+    <string name="today">Өнөөдөр</string>
+    <string name="upcoming">Удахгүй</string>
+    <string name="someday">Хэзээ нэгэн цагт</string>
+    <string name="tasks_count">%d даалгавар</string>
+    <string name="all_day">Бүхэл өдөр</string>
+    <string name="add_task">Даалгавар Нэмэх</string>
+    <string name="add_list">Жагсаалт Нэмэх</string>
+    <string name="task_title_hint">Даалгаврын гарчиг</string>
+    <string name="list_name_hint">Жагсаалтын нэр</string>
+    <string name="select_list">Жагсаалт сонгох</string>
+    <string name="select_date">Огноо сонгох</string>
+    <string name="select_time">Эхлэх цаг</string>
+    <string name="select_end_time">Дуусах цаг</string>
+    <string name="select_icon">Дүрс сонгох</string>
+    <string name="section_label">Хэсэг</string>
+    <string name="btn_save">Хадгалах</string>
+    <string name="btn_cancel">Цуцлах</string>
+    <string name="btn_delete">Устгах</string>
+    <string name="no_tasks">Даалгавар байхгүй</string>
+    <string name="no_tasks_sub">+ товчийг дарж нэмнэ үү</string>
+    <string name="add_new_list">Шинэ Жагсаалт\nНэмэх</string>
+    <string name="remind_me">Сануулга</string>
 </resources>

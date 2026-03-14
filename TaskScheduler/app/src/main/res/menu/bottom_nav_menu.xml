@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ФАЙЛЫН БАЙРШИЛ: res/menu/bottom_nav_menu.xml
+  "menu" хавтас байхгүй бол: res дээр right-click > New > Android Resource Directory > menu
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/ic_home"
+        android:title="@string/nav_home" />
+
+    <item
+        android:id="@+id/allTasksFragment"
+        android:icon="@drawable/ic_tasks"
+        android:title="@string/nav_all_tasks" />
+
+    <item
+        android:id="@+id/calendarFragment"
+        android:icon="@drawable/ic_calendar"
+        android:title="@string/nav_calendar" />
+
+</menu>
