@@ -18,7 +18,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <!-- Section color line - TaskAdapter-aas ongo tavirna -->
+        <!-- Section color line -->
         <View
             android:id="@+id/view_section_line"
             android:layout_width="4dp"
@@ -26,84 +26,57 @@
             android:minHeight="56dp"
             android:background="@color/accent_red"/>
 
-        <!-- Checkbox + task content -->
+        <!-- Checkbox -->
+        <ImageView
+            android:id="@+id/iv_checkbox"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_checkbox_unchecked"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"/>
+
+        <!-- Task ner + ogno tsag -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingStart="14dp"
-            android:paddingEnd="16dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
             android:paddingTop="14dp"
             android:paddingBottom="14dp">
 
-            <ImageView
-                android:id="@+id/iv_checkbox"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_checkbox_unchecked"
-                android:layout_marginEnd="14dp"/>
-
-            <LinearLayout
+            <TextView
+                android:id="@+id/tv_task_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:fontFamily="@font/inter_regular"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"/>
 
-                <TextView
-                    android:id="@+id/tv_task_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_regular"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"/>
+            <!-- Ogno + tsagiin medeelel - TaskAdapter-d format hiigdene -->
+            <TextView
+                android:id="@+id/tv_time_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_regular"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:visibility="gone"/>
 
-                <!-- Tsagiin mor -->
-                <LinearLayout
-                    android:id="@+id/ll_time_row"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="4dp"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Эхлэх: "
-                        android:fontFamily="@font/inter_regular"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"/>
-
-                    <TextView
-                        android:id="@+id/tv_start_time"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_regular"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"/>
-
-                    <TextView
-                        android:id="@+id/tv_end_time_separator"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="  →  Дуусах: "
-                        android:fontFamily="@font/inter_regular"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp"
-                        android:visibility="gone"/>
-
-                    <TextView
-                        android:id="@+id/tv_end_time"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_regular"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"
-                        android:visibility="gone"/>
-
-                </LinearLayout>
-            </LinearLayout>
         </LinearLayout>
+
+        <!-- Edit icon - баруун талд -->
+        <ImageView
+            android:id="@+id/iv_edit"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_edit"
+            android:tint="@color/accent_red"
+            android:padding="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"/>
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

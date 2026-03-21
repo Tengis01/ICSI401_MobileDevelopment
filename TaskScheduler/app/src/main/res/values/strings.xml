@@ -19,6 +19,7 @@
     <string name="tasks_count">%d даалгавар</string>
     <string name="all_day">Бүхэл өдөр</string>
     <string name="add_task">Даалгавар Нэмэх</string>
+    <string name="edit_task">Даалгавар Засварлах</string>
     <string name="add_list">Жагсаалт Нэмэх</string>
     <string name="task_title_hint">Даалгаврын гарчиг</string>
     <string name="list_name_hint">Жагсаалтын нэр</string>
@@ -34,5 +35,5 @@
     <string name="no_tasks">Даалгавар байхгүй</string>
     <string name="no_tasks_sub">+ товчийг дарж нэмнэ үү</string>
     <string name="add_new_list">Шинэ Жагсаалт\nНэмэх</string>
-    <string name="remind_me">Сануулга</string>
+    <string name="remind_me">Сануулга авах</string>
 </resources>

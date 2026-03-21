@@ -17,8 +17,9 @@ class TaskReminderWorker(
         const val KEY_TASK_TITLE = "task_title"
         const val KEY_TYPE       = "type"
 
-        const val TYPE_BEFORE = "before"
-        const val TYPE_AT     = "at"
+        const val TYPE_START  = "start"   // ehleh tsagaas 10min omno
+        const val TYPE_BEFORE = "before"  // duusah tsagaas 5min omno
+        const val TYPE_AT     = "at"      // duusah tsagт
     }
 
     override fun doWork(): Result {
@@ -28,12 +29,19 @@ class TaskReminderWorker(
         val type      = inputData.getString(KEY_TYPE)       ?: return Result.failure()
 
         val (notifTitle, notifMessage) = when (type) {
+            TYPE_START  -> Pair(taskTitle, "Daalgavar 10 minutiin daraa ehlene")
             TYPE_BEFORE -> Pair(taskTitle, "Daalgavar 5 minutiin daraa duusna")
             TYPE_AT     -> Pair(taskTitle, "Daalgavriin duusah tsag bolloo")
             else        -> return Result.failure()
         }
 
-        val notifId = if (type == TYPE_BEFORE) (taskId * 2).toInt() else (taskId * 2 + 1).toInt()
+        // Notification id - gурван notification адилхан id-tai болохгүй
+        // TYPE_START: taskId*3, TYPE_BEFORE: taskId*3+1, TYPE_AT: taskId*3+2
+        val notifId = when (type) {
+            TYPE_START  -> (taskId * 3).toInt()
+            TYPE_BEFORE -> (taskId * 3 + 1).toInt()
+            else        -> (taskId * 3 + 2).toInt()
+        }
 
         NotificationHelper.showNotification(context, notifId, notifTitle, notifMessage)
 
@@ -45,9 +53,7 @@ class TaskReminderWorker(
         return Result.success()
     }
 
-    // DatabaseHelper ashiglahgui - shuud SQLite update hiine
-    // Worker-iin context deer DatabaseHelper instantiate hiiheed
-    // zarim uyd connection hаагддаг uchir ingej bichiv
+    // DatabaseHelper ashiglaj task-iig checked bolgono
     private fun markTaskDone(taskId: Long) {
         val dbHelper = DatabaseHelper(context)
         val db: SQLiteDatabase = dbHelper.writableDatabase

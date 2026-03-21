@@ -133,9 +133,9 @@ class DatabaseHelper(context: Context) :
         while (cursor.moveToNext()) {
             lists.add(
                 TaskList(
-                    id = cursor.getLong(0),
-                    name = cursor.getString(1),
-                    iconName = cursor.getString(2),
+                    id        = cursor.getLong(0),
+                    name      = cursor.getString(1),
+                    iconName  = cursor.getString(2),
                     taskCount = cursor.getInt(3)
                 )
             )
@@ -251,17 +251,38 @@ class DatabaseHelper(context: Context) :
 
         // Husnegt ruu oruulah task-iin medeelliig beldej baina
         val cv = ContentValues().apply {
-            put(COL_TASK_TITLE, task.title)
+            put(COL_TASK_TITLE,   task.title)
             put(COL_TASK_LIST_ID, task.listId)
             put(COL_TASK_SECTION, task.section)
-            put(COL_TASK_DATE, task.date)
-            put(COL_TASK_TIME, task.time)
-            put(COL_TASK_ENDTIME, task.endTime)   // shine nemegdsen duusah tsag
-            put(COL_TASK_DONE, if (task.isDone) 1 else 0)
+            put(COL_TASK_DATE,    task.date)
+            put(COL_TASK_TIME,    task.time)
+            put(COL_TASK_ENDTIME, task.endTime)
+            put(COL_TASK_DONE,    if (task.isDone) 1 else 0)
         }
 
         // Shine task-iig database ruu oruulaad insert hiisen muriin id-g butsaana
         return db.insert(TABLE_TASKS, null, cv)
+    }
+
+    // Baigaa task-iig shine medeelleeer shinechleh function
+    // isDone-g oorchlohgui - zovhon garchig, list, section, ogno, tsag shinechlene
+    fun updateTask(task: Task) {
+
+        // Bichih erhtei database object avna
+        val db = writableDatabase
+
+        // Shine utguudiig beldej baina - isDone энд ороогүй учир checked baidlaa hamgaalna
+        val cv = ContentValues().apply {
+            put(COL_TASK_TITLE,   task.title)
+            put(COL_TASK_LIST_ID, task.listId)
+            put(COL_TASK_SECTION, task.section)
+            put(COL_TASK_DATE,    task.date)
+            put(COL_TASK_TIME,    task.time)
+            put(COL_TASK_ENDTIME, task.endTime)
+        }
+
+        // Tuhain id-tai task-iin buh talbarыг shine utgaar shinechlene
+        db.update(TABLE_TASKS, cv, "$COL_TASK_ID = ?", arrayOf(task.id.toString()))
     }
 
     // Task hiigdsen esehiin tuluv-g oorchloh function

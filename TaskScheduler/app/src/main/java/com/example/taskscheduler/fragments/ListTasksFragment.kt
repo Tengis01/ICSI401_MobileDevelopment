@@ -62,6 +62,14 @@ class ListTasksFragment : DialogFragment() {
             onTaskLongClick = { task ->
                 dbHelper.deleteTask(task.id)
                 loadTasks(listId, rvTasks, tvEmpty)
+            },
+            onEditClick = { task ->
+                AddTaskDialog.show(
+                    context     = requireContext(),
+                    dbHelper    = dbHelper,
+                    onTaskAdded = { loadTasks(listId, rvTasks, tvEmpty) },
+                    task        = task
+                )
             }
         )
 

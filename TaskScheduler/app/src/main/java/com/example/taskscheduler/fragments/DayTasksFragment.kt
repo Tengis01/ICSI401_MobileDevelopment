@@ -60,6 +60,14 @@ class DayTasksFragment : DialogFragment() {
             onTaskLongClick = { task ->
                 dbHelper.deleteTask(task.id)
                 loadTasks(date, rvTasks, tvEmpty)
+            },
+            onEditClick = { task ->
+                AddTaskDialog.show(
+                    context     = requireContext(),
+                    dbHelper    = dbHelper,
+                    onTaskAdded = { loadTasks(date, rvTasks, tvEmpty) },
+                    task        = task
+                )
             }
         )
 

@@ -6,16 +6,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.taskscheduler.R
 import com.example.taskscheduler.data.Task
 
 class TaskAdapter(
-    private val context: Context,
-    private val onTaskToggle: (Task, Boolean) -> Unit,
-    private val onTaskLongClick: (Task) -> Unit
+    private val context        : Context,
+    private val onTaskToggle   : (Task, Boolean) -> Unit,
+    private val onTaskLongClick: (Task) -> Unit,
+    private val onEditClick    : (Task) -> Unit   // edit icon darval duudagdah callback
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -43,15 +43,10 @@ class TaskAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
         return if (viewType == VIEW_TYPE_HEADER) {
-
-            // Header item-d ashiglah layout-g inflate hiij baina
             val view = LayoutInflater.from(context)
                 .inflate(R.layout.item_section_header, parent, false)
             HeaderViewHolder(view)
-
         } else {
-
-            // Task item-d ashiglah layout-g inflate hiij baina
             val view = LayoutInflater.from(context)
                 .inflate(R.layout.item_task, parent, false)
             TaskViewHolder(view)
@@ -68,43 +63,29 @@ class TaskAdapter(
 
     // Section garchig haruulah ViewHolder
     inner class HeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
-        // Garchig haruulah TextView
         private val tvHeader: TextView = view.findViewById(R.id.tv_section_header)
-
-        fun bind(title: String) {
-            tvHeader.text = title
-        }
+        fun bind(title: String) { tvHeader.text = title }
     }
 
     // Task item haruulah ViewHolder
     inner class TaskViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         // Zuun taliin section ongoiin mur
-        private val viewLine  : View         = view.findViewById(R.id.view_section_line)
+        private val viewLine : View      = view.findViewById(R.id.view_section_line)
 
         // Checkbox zurag haruulah ImageView
-        private val ivCheck   : ImageView    = view.findViewById(R.id.iv_checkbox)
+        private val ivCheck  : ImageView = view.findViewById(R.id.iv_checkbox)
 
         // Task-iin ner haruulah TextView
-        private val tvTitle   : TextView     = view.findViewById(R.id.tv_task_name)
+        private val tvTitle  : TextView  = view.findViewById(R.id.tv_task_name)
 
-        // Tsagiin mor - tsag baikhgui bol nuursan (GONE) baina
-        private val llTimeRow : LinearLayout = view.findViewById(R.id.ll_time_row)
+        // Ogno + tsagiin medeelel haruulah TextView
+        private val tvTime   : TextView  = view.findViewById(R.id.tv_time_info)
 
-        // Hereglegchiin songosон ehleh tsag haruulah TextView
-        private val tvStart   : TextView     = view.findViewById(R.id.tv_start_time)
+        // Edit icon - task-iig zasvarлах
+        private val ivEdit   : ImageView = view.findViewById(R.id.iv_edit)
 
-        // Duusah tsag baival haragdah separator
-        private val tvEndSep  : TextView     = view.findViewById(R.id.tv_end_time_separator)
-
-        // Duusah tsag haruulah TextView
-        private val tvEnd     : TextView     = view.findViewById(R.id.tv_end_time)
-
-        // Task medeelliig UI deer tavij, click event-uudiig holboh function
         fun bind(task: Task) {
-
-            // Task-iin garchgiig haruulna
             tvTitle.text = task.title
 
             // Section-oos hamaaruulj zuun taliin ongoiin moriig budana
@@ -113,18 +94,20 @@ class TaskAdapter(
             // Task hiigdsen esehees ni hamaaruulaad haragdah style-iig tohiruulna
             applyDoneStyle(task.isDone)
 
-            // Tsagiin moriin medeelliig tavina
-            bindTimeRow(task)
+            // Ogno tsagiin medeelliig formatted baidlaar haruulna
+            bindTimeInfo(task)
 
             // Checkbox deer darval hiigdsen tuluv-g esregeer ni solino
-            ivCheck.setOnClickListener {
-                onTaskToggle(task, !task.isDone)
-            }
+            ivCheck.setOnClickListener { onTaskToggle(task, !task.isDone) }
+
+            // Edit icon darval tuhain task-iin medeelleeer edit dialog neene
+            ivEdit.setOnClickListener { onEditClick(task) }
 
             // Task item deer urt darval ustgah action hiine
             itemView.setOnLongClickListener {
 
                 // Ustgahyn umnu text deer dunduur zuraas tavij, ulaan unguur haruulna
+                // Ingesneer hereglegchid ustgah action bolj baigaag oilgono
                 tvTitle.paintFlags = tvTitle.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                 tvTitle.setTextColor(context.getColor(R.color.accent_red))
                 tvTitle.alpha = 0.7f
@@ -135,9 +118,79 @@ class TaskAdapter(
             }
 
             // Task item deer engiin darval checkbox darsantai adil uildel hiine
-            itemView.setOnClickListener {
-                onTaskToggle(task, !task.isDone)
+            itemView.setOnClickListener { onTaskToggle(task, !task.isDone) }
+        }
+
+        // Ogno tsagiin medeelliig format hiij haruulah function
+        // Jishee:
+        //   Ogno + ehleh tsag + duusah tsag (neg ondor) → 2026.03.19  22:18 - 23:26
+        //   Ogno + ehleh tsag + duusah tsag (oor odor)  → 2026.03.19  22:18 - 03.26  22:18
+        //   Ogno + ehleh tsag                           → 2026.03.19  22:18
+        //   Zuvhan ogno                                 → 2026.03.19
+        private fun bindTimeInfo(task: Task) {
+            if (task.date.isEmpty()) {
+                tvTime.visibility = View.GONE
+                return
             }
+
+            // Ognoig "yyyy-MM-dd" → "yyyy.MM.dd" helber ruu huvirgana
+            val datePart = task.date.replace("-", ".")
+
+            val text = when {
+
+                // Ehleh tsag + duusah tsag 2 hоёр baiх - oor odor baij bolno
+                task.time.isNotEmpty() && task.endTime.isNotEmpty() -> {
+                    val startPart = "$datePart  ${task.time}"
+
+                    // EndTime-iin ognoог тооцоолно - ehleh tsag + duusah tsag neg ondor ch baij bolno
+                    val endDatePart = resolveEndDate(task.date, task.time, task.endTime)
+
+                    if (endDatePart == task.date) {
+                        // Neg odor dotor duusdag - ognoig davtahgui
+                        "$startPart - ${task.endTime}"
+                    } else {
+                        // Oor odor duusdag - end ognoig haruulna
+                        val endShort = endDatePart.substring(5).replace("-", ".")
+                        "$startPart - $endShort  ${task.endTime}"
+                    }
+                }
+
+                // Zuvhan ehleh tsag baiх
+                task.time.isNotEmpty() -> "$datePart  ${task.time}"
+
+                // Zuvhan ogno baiх
+                else -> datePart
+            }
+
+            tvTime.text       = text
+            tvTime.visibility = View.VISIBLE
+        }
+
+        // EndTime ehleh tsagaas baga baivaл daraa odor duusdаg gej uzne
+        // Jishee: ehleh 23:00, duusah 01:00 → daraa odor
+        private fun resolveEndDate(date: String, startTime: String, endTime: String): String {
+            val startMin = timeToMinutes(startTime)
+            val endMin   = timeToMinutes(endTime)
+
+            // EndTime ehleh tsagaas ih baivaл neg ondor - ognoo adil
+            if (endMin > startMin) return date
+
+            // EndMin <= startMin = shono damjsan - 1 odor nemne
+            return try {
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                val cal = java.util.Calendar.getInstance()
+                cal.time = sdf.parse(date)!!
+                cal.add(java.util.Calendar.DAY_OF_MONTH, 1)
+                sdf.format(cal.time)
+            } catch (e: Exception) {
+                date
+            }
+        }
+
+        // "HH:mm" → minutaar huvirgah tuslah function
+        private fun timeToMinutes(time: String): Int {
+            val parts = time.split(":")
+            return parts[0].toInt() * 60 + parts[1].toInt()
         }
 
         // Section-oos hamaaruulj zuun taliin ongoiin ongog butsaana
@@ -147,29 +200,8 @@ class TaskAdapter(
             else                  -> context.getColor(R.color.section_someday)
         }
 
-        // Ehleh bolon duusah tsagiig haruulah function
-        private fun bindTimeRow(task: Task) {
-            if (task.time.isEmpty()) {
-                llTimeRow.visibility = View.GONE
-                return
-            }
-
-            llTimeRow.visibility = View.VISIBLE
-            tvStart.text = task.time
-
-            if (task.endTime.isNotEmpty()) {
-                tvEndSep.visibility = View.VISIBLE
-                tvEnd.visibility    = View.VISIBLE
-                tvEnd.text          = task.endTime
-            } else {
-                tvEndSep.visibility = View.GONE
-                tvEnd.visibility    = View.GONE
-            }
-        }
-
         // Task hiigdsen esehees hamaaruulj UI style-iig oorchloh function
         private fun applyDoneStyle(isDone: Boolean) {
-
             if (isDone) {
 
                 // Hiigdsen task bol checked checkbox zurag tavina
@@ -180,6 +212,8 @@ class TaskAdapter(
 
                 // Text-iin ungiig budaaruulna
                 tvTitle.setTextColor(context.getColor(R.color.text_hint))
+
+                // Bas baga zereg transparant bolgoj duussan gedgiig iluu tod haruulna
                 tvTitle.alpha = 0.6f
 
             } else {
@@ -189,7 +223,11 @@ class TaskAdapter(
 
                 // Dunduur zuraasiig arilgana
                 tvTitle.paintFlags = tvTitle.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+
+                // Engiin undsen text ungiig tavina
                 tvTitle.setTextColor(context.getColor(R.color.text_primary))
+
+                // Buren tod haruulna
                 tvTitle.alpha = 1.0f
             }
         }
@@ -198,12 +236,10 @@ class TaskAdapter(
     // Task-uudiig Today, Upcoming, Someday hesgeer ni huvaaj
     // Header + task-uud helbereer items jagsaalt ruu hiih function
     fun submitTasks(tasks: List<Task>) {
-
-        // Umnuh item-uudiig tseverlej baina
         items.clear()
 
         // Section bur dotroo ehleh tsagaar erembelne
-        // Tsaggui task-uud tsagtaitai taskuudiin araas orно
+        // Tsaggui task-uud tsagtaitai taskuudiin araas orno
         fun List<Task>.sortedByTime() = sortedWith(
             compareBy(
                 { if (it.time.isEmpty()) 1 else 0 },
@@ -245,11 +281,10 @@ class TaskAdapter(
     // Calendar zorilgotoi task-uudiig ognoogoor ni buleglej
     // Header + task-uud helbereer items jagsaalt ruu hiih function
     fun submitCalendarTasks(tasks: List<Task>) {
-
-        // Umnuh item-uudiig tseverlej baina
         items.clear()
 
         // Zovhon ognootoi task-uudiig uldeej, neg neg ognoogoor ni group hiine
+        // toSortedMap ashiglasnaar ognoonuud usuh daraallaar baina
         val grouped = tasks
             .filter { it.date.isNotEmpty() }
             .groupBy { it.date }

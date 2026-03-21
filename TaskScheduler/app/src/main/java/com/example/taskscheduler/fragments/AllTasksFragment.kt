@@ -52,6 +52,7 @@ class AllTasksFragment : Fragment() {
         // Task-uudiig haruulah adapter uusgej baina
         // onTaskToggle ni checkbox oorchlogdohod ajillah logic
         // onTaskLongClick ni task deer urt darahad ajillah logic
+        // onEditClick ni edit icon darahad tuhain task-iig edit goriumaar dialog neeh logic
         _adapter = TaskAdapter(
             context = requireContext(),
             onTaskToggle = { task, isDone ->
@@ -69,6 +70,17 @@ class AllTasksFragment : Fragment() {
 
                 // Task ustsanii daraa delgets deer shine jagsaalt gargahyn tuld dahin achaalna
                 loadTasks()
+            },
+            onEditClick = { task ->
+
+                // Edit icon daragdsan task-iig dialog-d damjuulj edit goriumaar neene
+                // Task-iin buh medeelel dialog-d urьdchlaan duuregdene
+                AddTaskDialog.show(
+                    context     = requireContext(),
+                    dbHelper    = dbHelper,
+                    onTaskAdded = { loadTasks() },
+                    task        = task
+                )
             }
         )
 
@@ -86,8 +98,8 @@ class AllTasksFragment : Fragment() {
                 // AddTaskDialog-iig neej shine task oruulah bolomj olgoj baina
                 // onTaskAdded dotor loadTasks duudaj shine nemegdsen task-iig delgets deer haruulna
                 AddTaskDialog.show(
-                    context = requireContext(),
-                    dbHelper = dbHelper,
+                    context     = requireContext(),
+                    dbHelper    = dbHelper,
                     onTaskAdded = { loadTasks() }
                 )
             }
@@ -110,7 +122,7 @@ class AllTasksFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        // Task-uudiig dahin achaalj delgets deer shineчилнэ
+        // Task-uudiig dahin achaalj delgets deer shinechilne
         loadTasks()
     }
 

@@ -17,18 +17,22 @@ import java.util.Locale
 
 object AddTaskDialog {
 
-    // Shine task nemeh dialog haruulah function
+    // Shine task nemeh esvel baigaa task-iig edit hiih dialog haruulah function
+    // task = null baivaл ADD gorим, task damjuulvaл EDIT gorим
     fun show(
-        context: Context,
-        dbHelper: DatabaseHelper,
-        onTaskAdded: () -> Unit
+        context     : Context,
+        dbHelper    : DatabaseHelper,
+        onTaskAdded : () -> Unit,
+        task        : Task? = null
     ) {
+        // Edit gorим esehiig todorhoilno
+        val isEditMode = task != null
 
         // dialog_add_task.xml layout-g unshaad dialog dotor ashiglah View bolgoj baina
         val dialogView = LayoutInflater.from(context)
             .inflate(R.layout.dialog_add_task, null)
 
-        val etTitle    = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.et_task_title)
+        val etTitle        = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.et_task_title)
         val spinnerList    = dialogView.findViewById<Spinner>(R.id.spinner_list)
         val spinnerSection = dialogView.findViewById<Spinner>(R.id.spinner_section)
         val tvDate         = dialogView.findViewById<TextView>(R.id.tv_selected_date)
@@ -51,31 +55,64 @@ object AddTaskDialog {
         )
         spinnerSection.adapter = SectionSpinnerAdapter(context, sections)
 
-        // Anhnaasaa "hezee negen tsagt" songogdson - duusah tsag baihgui uchir
-        spinnerSection.setSelection(2)
+        // Edit gorim baivaл tuhain task-iin utguudiig field-uudad urьdchlaan duurgene
+        // Add gorim baivaл default utguudaar ewnene
+        var selectedDate    = task?.date    ?: ""
+        var selectedTime    = task?.time    ?: ""
+        var selectedEndTime = task?.endTime ?: ""
 
-        var selectedDate    = ""
-        var selectedTime    = ""
-        var selectedEndTime = ""
+        if (isEditMode) {
+            // Garchig - baigaa task-iin garchgaar duurgene
+            etTitle.setText(task!!.title)
 
-        btnEndTime.isEnabled   = false
-        switchRemind.isEnabled = false
+            // List spinner - tuhain task-iin list-iig songono
+            val listIndex = lists.indexOfFirst { it.id == task.listId }
+            if (listIndex >= 0) spinnerList.setSelection(listIndex)
+
+            // Section spinner - tuhain task-iin hesgiig songono
+            val sectionIndex = when (task.section) {
+                Task.SECTION_TODAY    -> 0
+                Task.SECTION_UPCOMING -> 1
+                else                  -> 2
+            }
+            spinnerSection.setSelection(sectionIndex)
+
+            // Ogno baival delgets deer haruulna
+            if (task.date.isNotEmpty()) tvDate.text = task.date
+
+            // Ehleh tsag baival haruulna, duusah tsag songoh tovchiig idewkhjuulna
+            if (task.time.isNotEmpty()) {
+                tvTime.text          = task.time
+                btnEndTime.isEnabled = true
+                switchRemind.isEnabled = true
+            }
+
+            // Duusah tsag baival haruulna
+            if (task.endTime.isNotEmpty()) {
+                tvEndTime.text         = task.endTime
+                switchRemind.isEnabled = true
+            }
+
+        } else {
+            // Add gorim - anhnaasaa "hezee negen tsagt" songogdson - duusah tsag baihgui uchir
+            spinnerSection.setSelection(2)
+            btnEndTime.isEnabled   = false
+            switchRemind.isEnabled = false
+        }
 
         // Ognoo songoh tovch daragdahad DatePickerDialog neej baina
         btnDate.setOnClickListener {
             val cal = Calendar.getInstance()
             DatePickerDialog(context, { _, y, m, d ->
 
-                // Locale.ROOT - tsever toо format, locale-aas hamaarахгүй
+                // Songogdson ognoog yyyy-MM-dd helbereer hadgalj baina
                 selectedDate = String.format(Locale.ROOT, "%04d-%02d-%02d", y, m + 1, d)
                 tvDate.text  = selectedDate
 
                 // Duusah tsag songogdson baivaл section auto-switch hiine
-                // Songoogui bol hezee negen tsagt heveer uldene
                 if (selectedEndTime.isNotEmpty()) {
                     autoSelectSection(spinnerSection, selectedDate)
                 }
-
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
 
@@ -83,9 +120,13 @@ object AddTaskDialog {
         btnTime.setOnClickListener {
             val cal = Calendar.getInstance()
             TimePickerDialog(context, { _, h, min ->
-                selectedTime         = String.format(Locale.ROOT, "%02d:%02d", h, min)
-                tvTime.text          = selectedTime
-                btnEndTime.isEnabled = true
+
+                // Songogdson ehleh tsag-iig HH:mm helbereer hadgalj baina
+                selectedTime           = String.format(Locale.ROOT, "%02d:%02d", h, min)
+                tvTime.text            = selectedTime
+                btnEndTime.isEnabled   = true
+                switchRemind.isEnabled = true
+
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
         }
 
@@ -96,6 +137,8 @@ object AddTaskDialog {
             val startM = parts[1].toInt()
 
             TimePickerDialog(context, { _, h, min ->
+
+                // Duusah tsag ehleh tsagaas ih baih yostoi, teguugeer shalgaj baina
                 if (h > startH || (h == startH && min > startM)) {
                     selectedEndTime        = String.format(Locale.ROOT, "%02d:%02d", h, min)
                     tvEndTime.text         = selectedEndTime
@@ -111,15 +154,22 @@ object AddTaskDialog {
             }, startH, startM + 1, true).show()
         }
 
+        // Edit gorim baivaл "Zasvarлах", add gorim baivaл "Daalgavar Nemeh" garchig
+        val titleRes = if (isEditMode) R.string.edit_task else R.string.add_task
+
+        // Task nemeh dialog-iig uusgej baina
+        // Title, custom view, save bolon cancel tovch-iig tohiruulj baina
         val dialog = AlertDialog.Builder(context, R.style.DarkDialogTheme)
-            .setTitle(context.getString(R.string.add_task))
+            .setTitle(context.getString(titleRes))
             .setView(dialogView)
             .setPositiveButton(context.getString(R.string.btn_save), null)
             .setNegativeButton(context.getString(R.string.btn_cancel), null)
             .create()
 
+        // Dialog-iig delgets deer haruulna
         dialog.show()
 
+        // Show()-iin daraa orgoniig tokhiruulna, omnoo hiivel ajillahgui
         dialog.window?.setLayout(
             (context.resources.displayMetrics.widthPixels * 0.92).toInt(),
             android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -128,20 +178,29 @@ object AddTaskDialog {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(context.getColor(R.color.text_primary))
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(context.getColor(R.color.text_primary))
 
+        // Save tovch deer custom logic bichij baina
+        // Ingesneer validation hiigeed zuv uyd ni l dialog haagdana
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+
+            // Hereglegchiin oruulsan garchgiig avch hooson zai-g arilgaj baina
             val title = etTitle.text.toString().trim()
 
+            // Hervee garchig hooson bol aldaa zaagaad tsaash yavahgui
             if (title.isEmpty()) {
                 etTitle.error = "Garchig oruulna uu"
                 return@setOnClickListener
             }
 
+            // Hervee yamar ch list baikhgui bol ehleed list nemeh heregtei gedgiig medegdene
             if (lists.isEmpty()) {
                 Toast.makeText(context, "Ehleed jagsaalt nemne uu", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            if (!dbHelper.isTimeAvailable(selectedDate, selectedTime, selectedEndTime)) {
+            // Davkhtsalt shalgahad edit gorиmд tuhain task-iig exclude hiine
+            // Ingesneer task ooroo oor task-tai davkhtsaj baina gej uzehgui
+            val excludeId = task?.id ?: -1L
+            if (!dbHelper.isTimeAvailable(selectedDate, selectedTime, selectedEndTime, excludeId)) {
                 Toast.makeText(
                     context,
                     "Tuhain tsagt argiin daalgavar baina, tsagiig oorchlono uu",
@@ -161,8 +220,10 @@ object AddTaskDialog {
                 }
             }
 
-            val taskId = dbHelper.insertTask(
-                Task(
+            if (isEditMode) {
+                // Edit gorim - baigaa task-iig shine medeelleeer shinechlene
+                // copy() ashiglasnaar isDone baidlaa hamgaalj uldene
+                val updatedTask = task!!.copy(
                     title   = title,
                     listId  = lists[spinnerList.selectedItemPosition].id,
                     section = sectionValue,
@@ -170,19 +231,52 @@ object AddTaskDialog {
                     time    = selectedTime,
                     endTime = selectedEndTime
                 )
-            )
+                dbHelper.updateTask(updatedTask)
 
-            if (switchRemind.isChecked && selectedDate.isNotEmpty() && selectedEndTime.isNotEmpty()) {
-                ReminderScheduler.schedule(
-                    context   = context,
-                    taskId    = taskId,
-                    taskTitle = title,
-                    date      = selectedDate,
-                    endTime   = selectedEndTime
+                // Omno ni schedule hiisen notification-uudiig cancel hiij shine-eer schedule hiine
+                ReminderScheduler.cancel(context, task.id)
+                if (switchRemind.isChecked && selectedDate.isNotEmpty() && selectedTime.isNotEmpty()) {
+                    ReminderScheduler.schedule(
+                        context   = context,
+                        taskId    = task.id,
+                        taskTitle = title,
+                        date      = selectedDate,
+                        startTime = selectedTime,
+                        endTime   = selectedEndTime
+                    )
+                }
+
+            } else {
+                // Add gorim - shine task object uusgeed database ruu hadgalj baina
+                val taskId = dbHelper.insertTask(
+                    Task(
+                        title   = title,
+                        listId  = lists[spinnerList.selectedItemPosition].id,
+                        section = sectionValue,
+                        date    = selectedDate,
+                        time    = selectedTime,
+                        endTime = selectedEndTime
+                    )
                 )
+
+                // Remind toggle asaaltai baivaл 3 notification schedule hiine:
+                // startTime - 10min, endTime - 5min, endTime
+                if (switchRemind.isChecked && selectedDate.isNotEmpty() && selectedTime.isNotEmpty()) {
+                    ReminderScheduler.schedule(
+                        context   = context,
+                        taskId    = taskId,
+                        taskTitle = title,
+                        date      = selectedDate,
+                        startTime = selectedTime,
+                        endTime   = selectedEndTime
+                    )
+                }
             }
 
+            // Task amjilttai nemegdsen tul gadnah screen deer list-ee shinechleh function duudna
             onTaskAdded()
+
+            // Dialog-iig haana
             dialog.dismiss()
         }
     }
@@ -200,9 +294,14 @@ object AddTaskDialog {
         spinner.setSelection(if (selectedDate == today) 0 else 1)
     }
 
-    // Spinner deer ashiglah custom dark adapter butsaah function
+    // Spinner deer ashiglah custom adapter butsaah function
+    // Ene ni dark theme-tei spinner-iin item-uudiig haruulahad ashiglagdana
     private fun darkSpinnerAdapter(context: Context, items: List<String>): ArrayAdapter<String> {
+
+        // Songogdson uyd haragdah item-iin layout-g ashiglaj adapter uusgej baina
         val adapter = ArrayAdapter(context, R.layout.spinner_item, items)
+
+        // Dropdown zadrahad haragdah itemuudiin layout-g tohiruulj baina
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
         return adapter
     }

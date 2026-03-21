@@ -8,22 +8,48 @@ import java.util.concurrent.TimeUnit
 
 object ReminderScheduler {
 
-    // Task-iin 2 notification-iig schedule hiih function
-    // date: "2026-03-18", endTime: "14:30"
-    fun schedule(context: Context, taskId: Long, taskTitle: String, date: String, endTime: String) {
+    fun schedule(
+        context   : Context,
+        taskId    : Long,
+        taskTitle : String,
+        date      : String,
+        startTime : String,
+        endTime   : String
+    ) {
+        // Date baihgui bol yamar ch schedule hiihgui
+        if (date.isEmpty()) return
 
-        // date esvel endTime hooson bol schedule hiihgui
-        if (date.isEmpty() || endTime.isEmpty()) return
+        // Ehleh tsag baival startTime songoogui baivaас endTime baivaas schedule hiihgui
+        // Ehleh tsag болон endTime хоёулаа хоосон бол schedule хийхгүй
+        if (startTime.isEmpty() && endTime.isEmpty()) return
 
-        // "2026-03-18 14:30" helbertei string uusgej end tsagiig tооtsоолno
         val sdf       = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-        val endDate   = sdf.parse("$date $endTime") ?: return
-        val endMillis = endDate.time
         val nowMillis = System.currentTimeMillis()
 
-        val delayAt = endMillis - nowMillis
+        // Ehleh tsag baival 10 min omno notification schedule hiine
+        if (startTime.isNotEmpty()) {
+            val startDate   = sdf.parse("$date $startTime") ?: return
+            val startMillis = startDate.time
+            val delayStart  = startMillis - nowMillis - (10 * 60 * 1000)
 
-        // Duusah tsag undursen bol schedule hiihgui
+            if (delayStart > 0) {
+                scheduleWorker(
+                    context   = context,
+                    taskId    = taskId,
+                    taskTitle = taskTitle,
+                    type      = TaskReminderWorker.TYPE_START,
+                    delayMs   = delayStart
+                )
+            }
+        }
+
+        // EndTime baihgui bol TYPE_BEFORE, TYPE_AT schedule hiihgui
+        if (endTime.isEmpty()) return
+
+        val endDate   = sdf.parse("$date $endTime") ?: return
+        val endMillis = endDate.time
+        val delayAt   = endMillis - nowMillis
+
         if (delayAt <= 0) return
 
         // Duusah tsagiin notification - zaavал schedule hiine
@@ -35,7 +61,7 @@ object ReminderScheduler {
             delayMs   = delayAt
         )
 
-        // 5 min omno notification - tsag hangaltai baival l schedule hiine
+        // 5 min omno notification
         val delayBefore = delayAt - (5 * 60 * 1000)
         if (delayBefore > 0) {
             scheduleWorker(
@@ -48,30 +74,25 @@ object ReminderScheduler {
         }
     }
 
-    // WorkManager-d neg OneTimeWorkRequest uusgej oruulah function
     private fun scheduleWorker(
-        context: Context,
-        taskId: Long,
+        context  : Context,
+        taskId   : Long,
         taskTitle: String,
-        type: String,
-        delayMs: Long
+        type     : String,
+        delayMs  : Long
     ) {
-        // Worker ruu damjuulah input data
         val data = workDataOf(
             TaskReminderWorker.KEY_TASK_ID    to taskId,
             TaskReminderWorker.KEY_TASK_TITLE to taskTitle,
             TaskReminderWorker.KEY_TYPE       to type
         )
 
-        // Neg udaa ajillah WorkRequest uusgej baina
         val request = OneTimeWorkRequestBuilder<TaskReminderWorker>()
             .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
             .setInputData(data)
-            // Unique tag - ustgah uyeд ashiglana
             .addTag("task_${taskId}_$type")
             .build()
 
-        // WorkManager-d oruulna - REPLACE = adiл tag-tai baival shine-eer darj bichne
         WorkManager.getInstance(context).enqueueUniqueWork(
             "task_${taskId}_$type",
             ExistingWorkPolicy.REPLACE,
@@ -79,8 +100,8 @@ object ReminderScheduler {
         )
     }
 
-    // Task ustgagdval 2 notification-iig hоёулыг cancel hiih function
     fun cancel(context: Context, taskId: Long) {
+        WorkManager.getInstance(context).cancelAllWorkByTag("task_${taskId}_${TaskReminderWorker.TYPE_START}")
         WorkManager.getInstance(context).cancelAllWorkByTag("task_${taskId}_${TaskReminderWorker.TYPE_BEFORE}")
         WorkManager.getInstance(context).cancelAllWorkByTag("task_${taskId}_${TaskReminderWorker.TYPE_AT}")
     }
