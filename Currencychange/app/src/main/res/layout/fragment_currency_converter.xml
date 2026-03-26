@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="24dp">
+
+        <!-- Буцах товч -->
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:text="← Буцах"
+            style="@style/Widget.MaterialComponents.Button.TextButton"/>
+
+        <!-- Туг (том emoji) -->
+        <TextView
+            android:id="@+id/tvFlagLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="80sp"
+            android:layout_marginTop="16dp"/>
+
+        <!-- Валютын код + dropdown дүрс -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:id="@+id/tvCurrencyCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" ▼"
+                android:textSize="14sp"
+                android:textColor="#666666"/>
+        </LinearLayout>
+
+        <!-- Дүн оруулах талбар -->
+        <EditText
+            android:id="@+id/etAmount"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:textSize="28sp"
+            android:gravity="center"
+            android:textColor="#1A1A1A"
+            android:layout_marginTop="8dp"
+            android:hint="0"
+            android:backgroundTint="#1565C0"/>
+
+        <!-- Хөрвүүлэх товч -->
+        <Button
+            android:id="@+id/btnConvert"
+            android:layout_width="200dp"
+            android:layout_height="52dp"
+            android:text="Хөрвүүлэх"
+            android:textSize="18sp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#7B9FD4"/>
+
+        <!-- Үр дүн — төгрөгийн дүн -->
+        <TextView
+            android:id="@+id/tvResult"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginTop="28dp"
+            android:text="0"/>
+
+        <!-- Хуваагч шугам -->
+        <View
+            android:layout_width="200dp"
+            android:layout_height="2dp"
+            android:background="#1565C0"
+            android:layout_marginTop="4dp"/>
+
+        <!-- MNT гарчиг -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MNT"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A"
+            android:layout_marginTop="8dp"/>
+
+        <!-- Монголын туг -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🇲🇳"
+            android:textSize="80sp"
+            android:layout_marginTop="12dp"/>
+
+    </LinearLayout>
+</ScrollView>
