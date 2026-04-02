@@ -3,10 +3,11 @@
 
     <application
         android:allowBackup="true"
-        android:label="Валютын Ханш"
+        android:label="Ханш хөрвүүлэгч"
+        android:icon="@mipmap/ic_currency_change"
+        android:roundIcon="@mipmap/ic_currency_change_round"
         android:theme="@style/Theme.MaterialComponents.Light.NoActionBar">
 
-        <!-- Зөвхөн нэг Activity бүртгэнэ -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
