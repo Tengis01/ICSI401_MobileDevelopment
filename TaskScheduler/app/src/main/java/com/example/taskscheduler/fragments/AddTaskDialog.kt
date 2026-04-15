@@ -2,7 +2,9 @@ package com.example.taskscheduler.fragments
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
-import android.app.TimePickerDialog
+import androidx.fragment.app.FragmentActivity
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import android.content.Context
 import android.view.LayoutInflater
 import android.widget.*
@@ -42,6 +44,11 @@ object AddTaskDialog {
         val btnTime        = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_pick_time)
         val btnEndTime     = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_pick_end_time)
         val switchRemind   = dialogView.findViewById<SwitchMaterial>(R.id.switch_remind)
+        val llCustomReminder = dialogView.findViewById<LinearLayout>(R.id.ll_custom_reminder)
+        val btnReminderDate  = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_pick_reminder_date)
+        val btnReminderTime  = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_pick_reminder_time)
+        val tvReminderDate   = dialogView.findViewById<TextView>(R.id.tv_reminder_date)
+        val tvReminderTime   = dialogView.findViewById<TextView>(R.id.tv_reminder_time)
 
         // Database-aas odoo baigaa buh list-iig avch baina
         val lists = dbHelper.getAllLists()
@@ -55,11 +62,13 @@ object AddTaskDialog {
         )
         spinnerSection.adapter = SectionSpinnerAdapter(context, sections)
 
-        // Edit gorim baivaл tuhain task-iin utguudiig field-uudad urьdchlaan duurgene
-        // Add gorim baivaл default utguudaar ewnene
+        // Edit gorim baivaл tuhain task-iin utguudiig field-uudad uridilj duurgene
+        // Add gorim baival default utguudaar ewnene
         var selectedDate    = task?.date    ?: ""
         var selectedTime    = task?.time    ?: ""
-        var selectedEndTime = task?.endTime ?: ""
+        var selectedEndTime      = task?.endTime ?: ""
+        var selectedReminderDate = task?.reminderDate ?: ""
+        var selectedReminderTime = task?.reminderTime ?: ""
 
         if (isEditMode) {
             // Garchig - baigaa task-iin garchgaar duurgene
@@ -93,6 +102,14 @@ object AddTaskDialog {
                 switchRemind.isEnabled = true
             }
 
+            if (selectedReminderDate.isNotEmpty()) tvReminderDate.text = selectedReminderDate
+            if (selectedReminderTime.isNotEmpty()) tvReminderTime.text = selectedReminderTime
+
+            if (selectedReminderDate.isNotEmpty() || selectedReminderTime.isNotEmpty()) {
+                switchRemind.isChecked = true
+                llCustomReminder.visibility = android.view.View.VISIBLE
+            }
+
         } else {
             // Add gorim - anhnaasaa "hezee negen tsagt" songogdson - duusah tsag baihgui uchir
             spinnerSection.setSelection(2)
@@ -116,42 +133,103 @@ object AddTaskDialog {
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         }
 
-        // Ehleh tsag songoh tovch daragdahad TimePickerDialog neej baina
+        // Ehleh tsag songoh tovch daragdahad MaterialTimePicker neej baina
         btnTime.setOnClickListener {
             val cal = Calendar.getInstance()
-            TimePickerDialog(context, { _, h, min ->
+            val fragmentManager = (context as? FragmentActivity)?.supportFragmentManager
+            if (fragmentManager != null) {
+                val materialTimePicker = MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .setHour(cal.get(Calendar.HOUR_OF_DAY))
+                    .setMinute(cal.get(Calendar.MINUTE))
+                    .setTitleText("Эхлэх цаг сонгох")
+                    .build()
 
-                // Songogdson ehleh tsag-iig HH:mm helbereer hadgalj baina
-                selectedTime           = String.format(Locale.ROOT, "%02d:%02d", h, min)
-                tvTime.text            = selectedTime
-                btnEndTime.isEnabled   = true
-                switchRemind.isEnabled = true
-
-            }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
+                materialTimePicker.addOnPositiveButtonClickListener {
+                    val h = materialTimePicker.hour
+                    val min = materialTimePicker.minute
+                    // Songogdson ehleh tsag-iig HH:mm helbereer hadgalj baina
+                    selectedTime           = String.format(Locale.ROOT, "%02d:%02d", h, min)
+                    tvTime.text            = selectedTime
+                    btnEndTime.isEnabled   = true
+                    switchRemind.isEnabled = true
+                }
+                materialTimePicker.show(fragmentManager, "START_TIME_PICKER")
+            }
         }
 
-        // Duusah tsag songoh tovch daragdahad TimePickerDialog neej baina
+        // Duusah tsag songoh tovch daragdahad MaterialTimePicker neej baina
         btnEndTime.setOnClickListener {
             val parts  = selectedTime.split(":")
             val startH = parts[0].toInt()
             val startM = parts[1].toInt()
 
-            TimePickerDialog(context, { _, h, min ->
+            var initialH = startH
+            var initialM = startM + 1
+            if (initialM >= 60) {
+                initialM -= 60
+                initialH = (initialH + 1) % 24
+            }
 
-                // Duusah tsag ehleh tsagaas ih baih yostoi, teguugeer shalgaj baina
-                if (h > startH || (h == startH && min > startM)) {
-                    selectedEndTime        = String.format(Locale.ROOT, "%02d:%02d", h, min)
-                    tvEndTime.text         = selectedEndTime
-                    switchRemind.isEnabled = true
+            val fragmentManager = (context as? FragmentActivity)?.supportFragmentManager
+            if (fragmentManager != null) {
+                val materialTimePicker = MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .setHour(initialH)
+                    .setMinute(initialM)
+                    .setTitleText("Дуусан цаг сонгох")
+                    .build()
 
-                    // Duusah tsag songogdsonii daraa ognoo baival section auto-switch hiine
-                    if (selectedDate.isNotEmpty()) {
-                        autoSelectSection(spinnerSection, selectedDate)
+                materialTimePicker.addOnPositiveButtonClickListener {
+                    val h = materialTimePicker.hour
+                    val min = materialTimePicker.minute
+                    // Duusah tsag ehleh tsagaas ih baih yostoi, teguugeer shalgaj baina
+                    if (h > startH || (h == startH && min > startM)) {
+                        selectedEndTime        = String.format(Locale.ROOT, "%02d:%02d", h, min)
+                        tvEndTime.text         = selectedEndTime
+                        switchRemind.isEnabled = true
+
+                        // Duusah tsag songogdsonii daraa ognoo baival section auto-switch hiine
+                        if (selectedDate.isNotEmpty()) {
+                            autoSelectSection(spinnerSection, selectedDate)
+                        }
+                    } else {
+                        Toast.makeText(context, "Duusah tsag ehleh tsagaas ih baih yostoi", Toast.LENGTH_SHORT).show()
                     }
-                } else {
-                    Toast.makeText(context, "Duusah tsag ehleh tsagaas ih baih yostoi", Toast.LENGTH_SHORT).show()
                 }
-            }, startH, startM + 1, true).show()
+                materialTimePicker.show(fragmentManager, "END_TIME_PICKER")
+            }
+        }
+
+        switchRemind.setOnCheckedChangeListener { _, isChecked ->
+            llCustomReminder.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+        }
+
+        btnReminderDate.setOnClickListener {
+            val cal = Calendar.getInstance()
+            DatePickerDialog(context, { _, y, m, d ->
+                selectedReminderDate = String.format(Locale.ROOT, "%04d-%02d-%02d", y, m + 1, d)
+                tvReminderDate.text  = selectedReminderDate
+            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        btnReminderTime.setOnClickListener {
+            val cal = Calendar.getInstance()
+            val fragmentManager = (context as? FragmentActivity)?.supportFragmentManager
+            if (fragmentManager != null) {
+                val picker = MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .setHour(cal.get(Calendar.HOUR_OF_DAY))
+                    .setMinute(cal.get(Calendar.MINUTE))
+                    .setTitleText("Сануулах цаг сонгох")
+                    .build()
+
+                picker.addOnPositiveButtonClickListener {
+                    selectedReminderTime = String.format(Locale.ROOT, "%02d:%02d", picker.hour, picker.minute)
+                    tvReminderTime.text  = selectedReminderTime
+                }
+                picker.show(fragmentManager, "REMINDER_TIME_PICKER")
+            }
         }
 
         // Edit gorim baivaл "Zasvarлах", add gorim baivaл "Daalgavar Nemeh" garchig
@@ -229,20 +307,24 @@ object AddTaskDialog {
                     section = sectionValue,
                     date    = selectedDate,
                     time    = selectedTime,
-                    endTime = selectedEndTime
+                    endTime = selectedEndTime,
+                    reminderDate = if (switchRemind.isChecked) selectedReminderDate else "",
+                    reminderTime = if (switchRemind.isChecked) selectedReminderTime else ""
                 )
                 dbHelper.updateTask(updatedTask)
 
                 // Omno ni schedule hiisen notification-uudiig cancel hiij shine-eer schedule hiine
                 ReminderScheduler.cancel(context, task.id)
-                if (switchRemind.isChecked && selectedDate.isNotEmpty() && selectedTime.isNotEmpty()) {
+                if (switchRemind.isChecked && (selectedDate.isNotEmpty() && selectedTime.isNotEmpty() || selectedReminderDate.isNotEmpty() && selectedReminderTime.isNotEmpty())) {
                     ReminderScheduler.schedule(
                         context   = context,
                         taskId    = task.id,
                         taskTitle = title,
                         date      = selectedDate,
                         startTime = selectedTime,
-                        endTime   = selectedEndTime
+                        endTime   = selectedEndTime,
+                        reminderDate = selectedReminderDate,
+                        reminderTime = selectedReminderTime
                     )
                 }
 
@@ -255,20 +337,24 @@ object AddTaskDialog {
                         section = sectionValue,
                         date    = selectedDate,
                         time    = selectedTime,
-                        endTime = selectedEndTime
+                        endTime = selectedEndTime,
+                        reminderDate = if (switchRemind.isChecked) selectedReminderDate else "",
+                        reminderTime = if (switchRemind.isChecked) selectedReminderTime else ""
                     )
                 )
 
                 // Remind toggle asaaltai baivaл 3 notification schedule hiine:
                 // startTime - 10min, endTime - 5min, endTime
-                if (switchRemind.isChecked && selectedDate.isNotEmpty() && selectedTime.isNotEmpty()) {
+                if (switchRemind.isChecked && (selectedDate.isNotEmpty() && selectedTime.isNotEmpty() || selectedReminderDate.isNotEmpty() && selectedReminderTime.isNotEmpty())) {
                     ReminderScheduler.schedule(
                         context   = context,
                         taskId    = taskId,
                         taskTitle = title,
                         date      = selectedDate,
                         startTime = selectedTime,
-                        endTime   = selectedEndTime
+                        endTime   = selectedEndTime,
+                        reminderDate = selectedReminderDate,
+                        reminderTime = selectedReminderTime
                     )
                 }
             }

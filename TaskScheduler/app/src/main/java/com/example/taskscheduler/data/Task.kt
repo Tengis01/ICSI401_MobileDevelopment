@@ -18,6 +18,8 @@ data class Task(
     val date: String = "",
     val time: String = "",
     val endTime : String = "",
+    val reminderDate: String = "",
+    val reminderTime: String = "",
     val isDone: Boolean = false
 ) {
     companion object {

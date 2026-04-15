@@ -14,17 +14,37 @@ object ReminderScheduler {
         taskTitle : String,
         date      : String,
         startTime : String,
-        endTime   : String
+        endTime   : String,
+        reminderDate: String = "",
+        reminderTime: String = ""
     ) {
         // Date baihgui bol yamar ch schedule hiihgui
         if (date.isEmpty()) return
 
+        val sdf       = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        val nowMillis = System.currentTimeMillis()
+
+        // If custom reminder is set, schedule only that and skip default logic
+        if (reminderDate.isNotEmpty() && reminderTime.isNotEmpty()) {
+            val customDate = sdf.parse("$reminderDate $reminderTime")
+            if (customDate != null) {
+                val delay = customDate.time - nowMillis
+                if (delay > 0) {
+                    scheduleWorker(
+                        context   = context,
+                        taskId    = taskId,
+                        taskTitle = taskTitle,
+                        type      = TaskReminderWorker.TYPE_START,
+                        delayMs   = delay
+                    )
+                }
+            }
+            return
+        }
+
         // Ehleh tsag baival startTime songoogui baivaас endTime baivaas schedule hiihgui
         // Ehleh tsag болон endTime хоёулаа хоосон бол schedule хийхгүй
         if (startTime.isEmpty() && endTime.isEmpty()) return
-
-        val sdf       = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-        val nowMillis = System.currentTimeMillis()
 
         // Ehleh tsag baival 10 min omno notification schedule hiine
         if (startTime.isNotEmpty()) {

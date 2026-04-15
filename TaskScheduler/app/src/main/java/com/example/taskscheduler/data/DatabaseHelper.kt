@@ -13,8 +13,8 @@ class DatabaseHelper(context: Context) :
         // Database-iin ner
         private const val DATABASE_NAME = "task_vault.db"
 
-        // Database-iin huvilbar - end_time bagana nemsen uchir 2 bolgow
-        private const val DATABASE_VERSION = 2
+        // Database-iin huvilbar - end_time bagana nemsen uchir 2 bolgow, reminder_date_time 3
+        private const val DATABASE_VERSION = 3
 
         // task_lists husnegtiin ner
         const val TABLE_LISTS = "task_lists"
@@ -35,6 +35,8 @@ class DatabaseHelper(context: Context) :
         const val COL_TASK_DATE = "date"
         const val COL_TASK_TIME = "time"
         const val COL_TASK_ENDTIME = "end_time"   // duusah tsag - zaildaa hoosoon baij bolno
+        const val COL_TASK_REMINDER_DATE = "reminder_date"
+        const val COL_TASK_REMINDER_TIME = "reminder_time"
         const val COL_TASK_DONE = "is_done"
     }
 
@@ -63,6 +65,8 @@ class DatabaseHelper(context: Context) :
                 $COL_TASK_DATE    TEXT DEFAULT '',
                 $COL_TASK_TIME    TEXT DEFAULT '',
                 $COL_TASK_ENDTIME TEXT DEFAULT '',
+                $COL_TASK_REMINDER_DATE TEXT DEFAULT '',
+                $COL_TASK_REMINDER_TIME TEXT DEFAULT '',
                 $COL_TASK_DONE    INTEGER DEFAULT 0,
                 FOREIGN KEY ($COL_TASK_LIST_ID) REFERENCES $TABLE_LISTS($COL_LIST_ID)
             )
@@ -79,6 +83,10 @@ class DatabaseHelper(context: Context) :
         // DROP hiihgui - oridiin data hadgalagdaj uldene
         if (oldVersion < 2) {
             db.execSQL("ALTER TABLE $TABLE_TASKS ADD COLUMN $COL_TASK_ENDTIME TEXT DEFAULT ''")
+        }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE $TABLE_TASKS ADD COLUMN $COL_TASK_REMINDER_DATE TEXT DEFAULT ''")
+            db.execSQL("ALTER TABLE $TABLE_TASKS ADD COLUMN $COL_TASK_REMINDER_TIME TEXT DEFAULT ''")
         }
     }
 
@@ -257,6 +265,8 @@ class DatabaseHelper(context: Context) :
             put(COL_TASK_DATE,    task.date)
             put(COL_TASK_TIME,    task.time)
             put(COL_TASK_ENDTIME, task.endTime)
+            put(COL_TASK_REMINDER_DATE, task.reminderDate)
+            put(COL_TASK_REMINDER_TIME, task.reminderTime)
             put(COL_TASK_DONE,    if (task.isDone) 1 else 0)
         }
 
@@ -279,6 +289,8 @@ class DatabaseHelper(context: Context) :
             put(COL_TASK_DATE,    task.date)
             put(COL_TASK_TIME,    task.time)
             put(COL_TASK_ENDTIME, task.endTime)
+            put(COL_TASK_REMINDER_DATE, task.reminderDate)
+            put(COL_TASK_REMINDER_TIME, task.reminderTime)
         }
 
         // Tuhain id-tai task-iin buh talbarыг shine utgaar shinechlene
@@ -356,6 +368,8 @@ class DatabaseHelper(context: Context) :
     // Cursor dotorh neg muriin medeelliig unshaad Task object bolgoj huvirgah function
     // Ene ni davtagdaj ashiglagdah tul tusad ni gargasan
     private fun cursorToTask(cursor: android.database.Cursor): Task {
+        val reminderDateIndex = cursor.getColumnIndex(COL_TASK_REMINDER_DATE)
+        val reminderTimeIndex = cursor.getColumnIndex(COL_TASK_REMINDER_TIME)
         return Task(
             id      = cursor.getLong(cursor.getColumnIndexOrThrow(COL_TASK_ID)),
             title   = cursor.getString(cursor.getColumnIndexOrThrow(COL_TASK_TITLE)),
@@ -364,6 +378,8 @@ class DatabaseHelper(context: Context) :
             date    = cursor.getString(cursor.getColumnIndexOrThrow(COL_TASK_DATE)),
             time    = cursor.getString(cursor.getColumnIndexOrThrow(COL_TASK_TIME)),
             endTime = cursor.getString(cursor.getColumnIndexOrThrow(COL_TASK_ENDTIME)),
+            reminderDate = if (reminderDateIndex != -1 && !cursor.isNull(reminderDateIndex)) cursor.getString(reminderDateIndex) else "",
+            reminderTime = if (reminderTimeIndex != -1 && !cursor.isNull(reminderTimeIndex)) cursor.getString(reminderTimeIndex) else "",
             isDone  = cursor.getInt(cursor.getColumnIndexOrThrow(COL_TASK_DONE)) == 1
         )
     }
