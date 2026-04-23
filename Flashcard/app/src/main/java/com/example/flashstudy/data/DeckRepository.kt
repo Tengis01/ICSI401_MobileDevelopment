@@ -1,73 +1,76 @@
 package com.example.flashstudy.data
 
-import android.content.Context
-import android.content.SharedPreferences
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.example.flashstudy.data.local.DeckDao
+import com.example.flashstudy.data.local.toDeckEntity
+import com.example.flashstudy.data.local.toFlashCardEntity
+import com.example.flashstudy.data.local.toFolderEntity
 
-// SharedPreferences + Gson ashiglaj deck-uudiig local-d hadgalna
-class DeckRepository(context: Context) {
+class DeckRepository(private val deckDao: DeckDao) {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(
-        "flashstudy_prefs",
-        Context.MODE_PRIVATE
-    )
-    private val gson = Gson()
-
-    // SharedPreferences-d hadgalah key
-    private val DECKS_KEY = "decks_data"
-
-    // deck-uudiig json-aas unshij list burunee butsaana
     fun getDecks(): List<Deck> {
-        val json = prefs.getString(DECKS_KEY, null) ?: return emptyList()
-        return try {
-            val type = object : TypeToken<List<Deck>>() {}.type
-            gson.fromJson(json, type) ?: emptyList()
-        } catch (e: Exception) {
-            // parse aldaa garsun bol khooson list butsaana
-            emptyList()
-        }
+        return deckDao.getDecksWithCards().map { it.toDeck() }
     }
 
-    // buh deck-uudiig json bolgoj SharedPreferences-d bichdeg private function
-    private fun saveAllDecks(decks: List<Deck>) {
-        val json = gson.toJson(decks)
-        prefs.edit().putString(DECKS_KEY, json).apply()
-    }
-
-    // shine deck nemeh, odriin deck id-tai tailgaar shinechleh
     fun saveDeck(deck: Deck) {
-        val current = getDecks().toMutableList()
-        val existingIndex = current.indexOfFirst { it.id == deck.id }
-        if (existingIndex >= 0) {
-            // bairshin bui deck-iig shinechlene
-            current[existingIndex] = deck
-        } else {
-            // shine deck nemne
-            current.add(deck)
-        }
-        saveAllDecks(current)
+        val deckEntity = deck.toDeckEntity()
+        val cardEntities = deck.cards.map { it.toFlashCardEntity(deck.id) }
+        deckDao.saveDeckWithCards(deckEntity, cardEntities)
     }
 
-    // id-aar deck-iig ustgana
     fun deleteDeck(deckId: String) {
-        val current = getDecks().toMutableList()
-        current.removeAll { it.id == deckId }
-        saveAllDecks(current)
-    }
-
-    // id-aar neg deck-iig oll, oldohgui bol null butsaana
-    fun getDeckById(deckId: String): Deck? {
-        return getDecks().firstOrNull { it.id == deckId }
-    }
-
-    // deck dotor card-iig id-aar oll, shine card-aar soliod deck-iig hadgalna
-    fun updateCard(deckId: String, updatedCard: FlashCard) {
-        val deck = getDeckById(deckId) ?: return
-        val updatedCards = deck.cards.map { card ->
-            if (card.id == updatedCard.id) updatedCard else card
+        val deckEntity = deckDao.getDeckWithCardsById(deckId)?.deck
+        if (deckEntity != null) {
+            deckDao.deleteDeck(deckEntity)
         }
-        val updatedDeck = deck.copy(cards = updatedCards)
-        saveDeck(updatedDeck)
+    }
+
+    fun getDeckById(deckId: String): Deck? {
+        return deckDao.getDeckWithCardsById(deckId)?.toDeck()
+    }
+
+    fun updateCard(deckId: String, updatedCard: FlashCard) {
+        val cardEntity = updatedCard.toFlashCardEntity(deckId)
+        deckDao.updateCard(cardEntity)
+    }
+
+    // --- Folder Methods ---
+
+    fun getFolders(): List<Folder> {
+        return deckDao.getFoldersWithDecks().map { it.toFolder() }
+    }
+
+    fun saveFolder(folder: Folder) {
+        deckDao.insertFolder(folder.toFolderEntity())
+        // Keep cross refs intact - we just update the folder itself.
+        // The user's requested Folder data class has deckIds, but we manage them via addDeckToFolder.
+        // Wait, if folder has deckIds on save, we might need to sync them.
+        // Let's implement full sync if deckIds is provided.
+        val currentDecks = getFolderById(folder.id)?.deckIds ?: emptyList()
+        val newDecks = folder.deckIds
+        
+        val toRemove = currentDecks - newDecks.toSet()
+        val toAdd = newDecks - currentDecks.toSet()
+
+        toRemove.forEach { deckId -> deckDao.deleteFolderDeckCrossRef(folder.id, deckId) }
+        toAdd.forEach { deckId -> deckDao.insertFolderDeckCrossRef(com.example.flashstudy.data.local.FolderDeckCrossRef(folder.id, deckId)) }
+    }
+
+    fun deleteFolder(folderId: String) {
+        val folderEntity = deckDao.getFolderWithDecksById(folderId)?.folder
+        if (folderEntity != null) {
+            deckDao.deleteFolder(folderEntity)
+        }
+    }
+
+    fun getFolderById(folderId: String): Folder? {
+        return deckDao.getFolderWithDecksById(folderId)?.toFolder()
+    }
+
+    fun addDeckToFolder(folderId: String, deckId: String) {
+        deckDao.insertFolderDeckCrossRef(com.example.flashstudy.data.local.FolderDeckCrossRef(folderId, deckId))
+    }
+
+    fun removeDeckFromFolder(folderId: String, deckId: String) {
+        deckDao.deleteFolderDeckCrossRef(folderId, deckId)
     }
 }

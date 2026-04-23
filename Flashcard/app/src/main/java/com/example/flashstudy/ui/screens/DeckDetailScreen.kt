@@ -105,8 +105,12 @@ fun DeckDetailScreen(
     // Tootsoolson utguud - deck null bol 0 bolgono
     val total = deck?.cards?.size ?: 0
     val mastered = deck?.cards?.count { it.leitnerBox == 5 } ?: 0
-    val toReview = deck?.cards?.count { it.needsReview } ?: 0
-    val progress = if (total > 0) mastered * 100 / total else 0
+    val toReview = deck?.cards?.count { it.needsReview && it.leitnerBox < 5 } ?: 0
+    // Weighted Leitner progress: box1=0%, box2=25%, box3=50%, box4=75%, box5=100%
+    val progress = if (total > 0) {
+        val weightedSum = deck!!.cards.sumOf { ((it.leitnerBox - 1) * 25) }
+        weightedSum / total
+    } else 0
 
     // Ustgah baiguullag - deck ustgaj deck_list ruu butsana
     if (showDeleteDialog) {
@@ -207,8 +211,6 @@ fun DeckDetailScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item { Spacer(modifier = Modifier.height(4.dp)) }
-
                 // === Hero card: avatar + ner + tailbar + suuld uzsen ===
                 item {
                     Card(
@@ -429,14 +431,6 @@ fun DeckDetailScreen(
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
-                        TextButton(onClick = { onNavigateToCardEditor(null) }) {
-                            Text(
-                                text = "+ Нэмэх",
-                                color = Primary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
                     }
                 }
 
@@ -618,5 +612,22 @@ private fun ModeButton(
                 overflow = TextOverflow.Ellipsis
             )
         }
+    }
+}
+
+// Epoch millisecond-iig "X odriin omno" gesen tekst bolgoh tuslah function
+private fun formatTimeAgo(timestamp: Long): String {
+    val now = System.currentTimeMillis()
+    val diff = now - timestamp
+    val minutes = diff / (1000 * 60)
+    val hours = minutes / 60
+    val days = hours / 24
+
+    return when {
+        minutes < 1 -> "Дөнгөж сая"
+        minutes < 60 -> "$minutes мин өмнө"
+        hours < 24 -> "$hours цагийн өмнө"
+        days < 7 -> "$days өдрийн өмнө"
+        else -> "${days / 7} долоо хоногийн өмнө"
     }
 }

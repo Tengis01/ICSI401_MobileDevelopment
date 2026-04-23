@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -62,11 +63,16 @@ dependencies {
 
     // FlashStudy-d nemsen dependency-ууд
     implementation("androidx.navigation:navigation-compose:2.8.4")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.gson)
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     // LocalLifecycleOwner-d shaardlagatai - DeckListScreen, DeckDetailScreen ashiglana
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+
+    // Room dependencies
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

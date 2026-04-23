@@ -136,8 +136,6 @@ fun StatsScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item { Spacer(modifier = Modifier.height(4.dp)) }
-
                 // === 2x2 Summary grid ===
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

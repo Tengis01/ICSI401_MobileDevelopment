@@ -129,7 +129,7 @@ fun LearnScreen(
             val newBox = minOf(5, card.leitnerBox + 1)
             repository.updateCard(
                 deckId,
-                card.copy(leitnerBox = newBox, needsReview = newBox < 5)
+                card.copy(leitnerBox = newBox, needsReview = false)
             )
             correctCount++
         } else {
@@ -340,9 +340,9 @@ fun LearnScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // "ORCHUULGYYG BICH" label
+                            // "HARIULT BICH" label
                             Text(
-                                text = "ОРЧУУЛГЫГ БИЧ",
+                                text = "ХАРИУЛТ БИЧ",
                                 fontSize = 10.sp,
                                 color = TextMuted,
                                 letterSpacing = 1.5.sp,
@@ -394,22 +394,7 @@ fun LearnScreen(
 
                                         Spacer(modifier = Modifier.height(12.dp))
 
-                                        // "Mongol -> Angli" tag
-                                        Box(
-                                            modifier = Modifier
-                                                .background(
-                                                    Primary.copy(alpha = 0.10f),
-                                                    RoundedCornerShape(8.dp)
-                                                )
-                                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                                        ) {
-                                            Text(
-                                                text = "Монгол → Англи",
-                                                fontSize = 11.sp,
-                                                color = Primary,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        }
+
 
                                         // needsReview flag haruulah
                                         currentCard?.let { card ->
@@ -447,7 +432,7 @@ fun LearnScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     placeholder = {
                                         Text(
-                                            text = "Энд орчуулгаа бич...",
+                                            text = "Энд хариултаа бич...",
                                             color = TextMuted
                                         )
                                     },

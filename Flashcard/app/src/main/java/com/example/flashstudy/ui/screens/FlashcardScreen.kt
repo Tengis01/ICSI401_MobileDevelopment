@@ -1,13 +1,13 @@
 package com.example.flashstudy.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,14 +16,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,31 +32,34 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import com.example.flashstudy.data.DeckRepository
 import com.example.flashstudy.ui.theme.Danger
 import com.example.flashstudy.ui.theme.GradientBackground
@@ -67,10 +71,11 @@ import com.example.flashstudy.ui.theme.Surface
 import com.example.flashstudy.ui.theme.TextMuted
 import com.example.flashstudy.ui.theme.TextPrimary
 import com.example.flashstudy.ui.theme.Warning
-import com.example.flashstudy.ui.theme.White
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 // Flashcard flip dasgaliin delgets - Leitner system-eer kart zagwarjuulna
-// Kart togshihod 3D flip animation haruulna, ard ni unelgee songono
+// Swipe (Quizlet-style) mechanism
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FlashcardScreen(
@@ -93,6 +98,14 @@ fun FlashcardScreen(
 
     val currentCard = studyCards.getOrNull(currentIndex)
 
+    // lastStudied-iig shinechlene - RecentlyViewed section ajillana
+    LaunchedEffect(Unit) {
+        val currentDeck = repository.getDeckById(deckId)
+        if (currentDeck != null) {
+            repository.saveDeck(currentDeck.copy(lastStudied = System.currentTimeMillis()))
+        }
+    }
+
     // 3D flip animatsiin erguulelt - 0..180 degree
     val rotation by animateFloatAsState(
         targetValue = if (isFlipped) 180f else 0f,
@@ -100,8 +113,15 @@ fun FlashcardScreen(
         label = "card_flip_rotation"
     )
 
-    // Daraa kartyruu oroh tuslah function
-    // isFlipped-iig false bolgoj, daraagiin kart esvel durgen irgelten haruulna
+    val scope = rememberCoroutineScope()
+    val offsetX = remember { Animatable(0f) }
+    val offsetY = remember { Animatable(0f) }
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val densityValue = density.density
+    val screenWidth = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val threshold = 120f * densityValue
+
     fun nextCard() {
         isFlipped = false
         if (currentIndex < studyCards.size - 1) {
@@ -111,40 +131,59 @@ fun FlashcardScreen(
         }
     }
 
+    fun swipeCard(direction: Int) { // 1 for right, -1 for left
+        scope.launch {
+            offsetX.animateTo(direction * screenWidth * 1.5f, tween(300))
+            
+            if (direction > 0) {
+                // Correct / Know
+                currentCard?.let { card ->
+                    val newBox = minOf(5, card.leitnerBox + 1)
+                    val updated = card.copy(leitnerBox = newBox, needsReview = false)
+                    repository.updateCard(deckId, updated)
+                    deck = repository.getDeckById(deckId)
+                    correctCount++
+                }
+            } else {
+                // Review
+                currentCard?.let { card ->
+                    val updated = card.copy(leitnerBox = 1, needsReview = true)
+                    repository.updateCard(deckId, updated)
+                    deck = repository.getDeckById(deckId)
+                    reviewCount++
+                }
+            }
+            
+            nextCard()
+            
+            // Snap back silently for the next card
+            offsetX.snapTo(0f)
+            offsetY.snapTo(0f)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Буцах",
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
                             tint = TextPrimary
                         )
                     }
                 },
                 title = {
                     Text(
-                        text = "Flashcard горим",
+                        text = "Карт тоглуулагч",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
                 },
-                actions = {
-                    // Odoogiin / niit kart toloolog haruulna
-                    if (!isCompleted && studyCards.isNotEmpty()) {
-                        Text(
-                            text = "${currentIndex + 1}/${studyCards.size}",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Primary,
-                            modifier = Modifier.padding(end = 16.dp)
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = White
+                    containerColor = Color.Transparent
                 )
             )
         },
@@ -197,7 +236,7 @@ fun FlashcardScreen(
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(24.dp),
-                                colors = CardDefaults.cardColors(containerColor = White),
+                                colors = CardDefaults.cardColors(containerColor = Surface),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                             ) {
                                 Column(
@@ -239,6 +278,10 @@ fun FlashcardScreen(
                                             reviewCount = 0
                                             isCompleted = false
                                             deck = repository.getDeckById(deckId)
+                                            scope.launch {
+                                                offsetX.snapTo(0f)
+                                                offsetY.snapTo(0f)
+                                            }
                                         },
                                         modifier = Modifier.fillMaxWidth(),
                                         border = androidx.compose.foundation.BorderStroke(
@@ -273,378 +316,302 @@ fun FlashcardScreen(
                             modifier = Modifier.fillMaxSize(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Ahitsiin progress tuuzny deer
+                            // Counters (Left and Right edges)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Review counter (Left)
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            com.example.flashstudy.ui.theme.Warning.copy(alpha = 0.15f),
+                                            RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
+                                        )
+                                        .border(
+                                            2.dp,
+                                            com.example.flashstudy.ui.theme.Warning.copy(alpha = 0.5f),
+                                            RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
+                                        )
+                                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = reviewCount.toString(), color = com.example.flashstudy.ui.theme.Warning, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                }
+
+                                // Known counter (Right)
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            com.example.flashstudy.ui.theme.Success.copy(alpha = 0.15f),
+                                            RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp)
+                                        )
+                                        .border(
+                                            2.dp,
+                                            com.example.flashstudy.ui.theme.Success.copy(alpha = 0.5f),
+                                            RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp)
+                                        )
+                                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = correctCount.toString(), color = com.example.flashstudy.ui.theme.Success, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Progress bar
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 24.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = deck?.name ?: "Багц",
+                                    fontSize = 14.sp,
+                                    color = com.example.flashstudy.ui.theme.Secondary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = "${currentIndex + 1} / ${studyCards.size}",
+                                    fontSize = 14.sp,
+                                    color = com.example.flashstudy.ui.theme.Secondary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
                             LinearProgressIndicator(
                                 progress = {
                                     (currentIndex + 1).toFloat() / studyCards.size
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(3.dp),
-                                color = Primary,
-                                trackColor = Primary.copy(alpha = 0.12f),
+                                    .padding(horizontal = 24.dp)
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp)),
+                                color = com.example.flashstudy.ui.theme.Secondary,
+                                trackColor = com.example.flashstudy.ui.theme.SurfaceVariant,
                                 strokeCap = StrokeCap.Round
                             )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(24.dp))
 
-                            // Flip zaavarlah tekst
-                            Text(
-                                text = if (!isFlipped) {
-                                    "Картыг тогшоод нөгөө талыг харна уу"
-                                } else {
-                                    "Та мэдэж байсан уу?"
-                                },
-                                fontSize = 12.sp,
-                                color = TextMuted,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 24.dp)
-                            )
+                            val knowAlpha = (offsetX.value / threshold).coerceIn(0f, 1f)
+                            val reviewAlpha = (-offsetX.value / threshold).coerceIn(0f, 1f)
+                            val rotationZValue = (offsetX.value / screenWidth) * 15f
+                            val borderColor = when {
+                                knowAlpha > 0f -> Success.copy(alpha = knowAlpha)
+                                reviewAlpha > 0f -> Warning.copy(alpha = reviewAlpha)
+                                else -> Color.Transparent
+                            }
 
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // === 3D flip kart ===
+                            // === Swipe-able Card Container ===
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .weight(1f) // Fill remaining space
                                     .padding(horizontal = 24.dp)
-                                    .height(220.dp)
-                                    .clickable { isFlipped = !isFlipped }
+                                    .padding(bottom = 48.dp) // Leave some space at bottom
+                                    .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
                                     .graphicsLayer {
-                                        rotationY = rotation
-                                        // CameraDistance 3D effektiin gurvan dornotoo shaardlaga
-                                        cameraDistance = 12f * density
+                                        rotationZ = rotationZValue
+                                    }
+                                    .pointerInput(Unit) {
+                                        detectDragGestures(
+                                            onDragEnd = {
+                                                if (offsetX.value > threshold) {
+                                                    swipeCard(1)
+                                                } else if (offsetX.value < -threshold) {
+                                                    swipeCard(-1)
+                                                } else {
+                                                    scope.launch {
+                                                        offsetX.animateTo(0f)
+                                                    }
+                                                    scope.launch {
+                                                        offsetY.animateTo(0f)
+                                                    }
+                                                }
+                                            },
+                                            onDrag = { change, dragAmount ->
+                                                change.consume()
+                                                scope.launch {
+                                                    offsetX.snapTo(offsetX.value + dragAmount.x)
+                                                    offsetY.snapTo(offsetY.value + dragAmount.y)
+                                                }
+                                            }
+                                        )
+                                    }
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onTap = { isFlipped = !isFlipped }
+                                        )
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (rotation <= 90f) {
-                                    // === Unuun tal - term haruulna ===
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .border(
-                                                width = 1.dp,
-                                                color = Primary,
-                                                shape = RoundedCornerShape(24.dp)
-                                            ),
-                                        shape = RoundedCornerShape(24.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = White
-                                        ),
-                                        elevation = CardDefaults.cardElevation(
-                                            defaultElevation = 6.dp
-                                        )
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .padding(24.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Center
-                                        ) {
-                                            // "NER TOMYOO" label
-                                            Text(
-                                                text = "НЭР ТОМЬЁО",
-                                                fontSize = 10.sp,
-                                                color = TextMuted,
-                                                letterSpacing = 1.5.sp,
-                                                fontWeight = FontWeight.Medium
-                                            )
-
-                                            Spacer(modifier = Modifier.height(12.dp))
-
-                                            // Undsen term tekst
-                                            Text(
-                                                text = currentCard?.term ?: "",
-                                                fontSize = 26.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = TextPrimary,
-                                                textAlign = TextAlign.Center
-                                            )
-
-                                            Spacer(modifier = Modifier.height(16.dp))
-
-                                            // Leitner dot ba box dugaar
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                val leitnerBox =
-                                                    currentCard?.leitnerBox ?: 1
-                                                val dotColor = leitnerBoxColor(leitnerBox)
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(8.dp)
-                                                        .clip(
-                                                            androidx.compose.foundation.shape.CircleShape
-                                                        )
-                                                        .background(dotColor)
-                                                )
-                                                Spacer(modifier = Modifier.width(6.dp))
-                                                Text(
-                                                    text = "Leitner хайрцаг $leitnerBox",
-                                                    fontSize = 11.sp,
-                                                    color = TextMuted
-                                                )
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    // === Ard tal - definition haruulna ===
-                                    // rotationY 180 - flip hiigdsen kartiin ard medeelel
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .graphicsLayer { rotationY = 180f }
-                                    ) {
+                                // Face & Back
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    if (rotation <= 90f) {
                                         Card(
-                                            modifier = Modifier
-                                                .fillMaxSize()
+                                            modifier = Modifier.fillMaxSize()
+                                                .graphicsLayer {
+                                                    rotationY = rotation
+                                                    cameraDistance = 12f * densityValue
+                                                }
                                                 .border(
-                                                    width = 1.dp,
-                                                    color = Primary.copy(alpha = 0.30f),
-                                                    shape = RoundedCornerShape(24.dp)
+                                                    width = 4.dp,
+                                                    color = borderColor,
+                                                    shape = RoundedCornerShape(32.dp)
                                                 ),
-                                            shape = RoundedCornerShape(24.dp),
-                                            colors = CardDefaults.cardColors(
-                                                containerColor = Surface
-                                            ),
-                                            elevation = CardDefaults.cardElevation(
-                                                defaultElevation = 6.dp
-                                            )
+                                            shape = RoundedCornerShape(32.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Surface),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                                         ) {
                                             Column(
-                                                modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .padding(24.dp),
+                                                modifier = Modifier.fillMaxSize().padding(32.dp),
                                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                                verticalArrangement = Arrangement.Center
+                                                verticalArrangement = Arrangement.SpaceBetween
                                             ) {
-                                                // "TAILBAR" label
-                                                Text(
-                                                    text = "ТАЙЛБАР",
-                                                    fontSize = 10.sp,
-                                                    color = TextMuted,
-                                                    letterSpacing = 1.5.sp,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-
-                                                Spacer(modifier = Modifier.height(12.dp))
-
-                                                // Definitsiin tekst - Primary ongoor
-                                                Text(
-                                                    text = currentCard?.definition ?: "",
-                                                    fontSize = 20.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Primary,
-                                                    textAlign = TextAlign.Center
-                                                )
+                                                Box(
+                                                    modifier = Modifier
+                                                        .background(com.example.flashstudy.ui.theme.PrimaryContainer, RoundedCornerShape(12.dp))
+                                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "НЭР ТОМЬЁО",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = com.example.flashstudy.ui.theme.Secondary
+                                                    )
+                                                }
+                                                
+                                                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                                    Text(
+                                                        text = currentCard?.term ?: "",
+                                                        fontSize = 38.sp, // Made larger
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextPrimary,
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
+                                                
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.TouchApp,
+                                                        contentDescription = null,
+                                                        tint = TextMuted,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = "Тогшоод эргүүлэх",
+                                                        fontSize = 14.sp,
+                                                        color = TextMuted
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        Card(
+                                            modifier = Modifier.fillMaxSize()
+                                                .graphicsLayer { 
+                                                    rotationY = rotation 
+                                                    cameraDistance = 12f * densityValue
+                                                }
+                                                .border(
+                                                    width = 4.dp,
+                                                    color = borderColor,
+                                                    shape = RoundedCornerShape(32.dp)
+                                                ),
+                                            shape = RoundedCornerShape(32.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Surface),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.fillMaxSize().padding(32.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .background(com.example.flashstudy.ui.theme.PrimaryContainer, RoundedCornerShape(12.dp))
+                                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "ТАЙЛБАР",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = com.example.flashstudy.ui.theme.Secondary
+                                                    )
+                                                }
+                                                
+                                                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                                    Text(
+                                                        text = currentCard?.definition ?: "",
+                                                        fontSize = 28.sp, // Made larger
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = TextPrimary,
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
+                                                
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.TouchApp,
+                                                        contentDescription = null,
+                                                        tint = TextMuted,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = "Тогшоод эргүүлэх",
+                                                        fontSize = 14.sp,
+                                                        color = TextMuted
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            // === Unelgeenii tovch: AnimatedVisibility flip hiisen yed l haruulna ===
-                            AnimatedVisibility(
-                                visible = isFlipped,
-                                enter = fadeIn() + slideInVertically { it / 2 },
-                                exit = fadeOut() + slideOutVertically { it / 2 }
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 24.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    // "To review" - buruugaar medeegui, leitner box 1-d butsaana
+                                // Overlays for visual feedback
+                                if (knowAlpha > 0f) {
                                     Box(
                                         modifier = Modifier
-                                            .weight(1f)
-                                            .height(52.dp)
-                                            .clip(RoundedCornerShape(14.dp))
-                                            .background(Warning.copy(alpha = 0.10f))
-                                            .border(
-                                                width = 2.dp,
-                                                color = Warning,
-                                                shape = RoundedCornerShape(14.dp)
-                                            )
-                                            .clickable {
-                                                currentCard?.let { card ->
-                                                    // Box 1 ruu butsaaj, davtah flag togloono
-                                                    val updated = card.copy(
-                                                        leitnerBox = 1,
-                                                        needsReview = true
-                                                    )
-                                                    repository.updateCard(deckId, updated)
-                                                    deck = repository.getDeckById(deckId)
-                                                    reviewCount++
-                                                    nextCard()
-                                                }
-                                            },
+                                            .fillMaxSize()
+                                            .background(Surface.copy(alpha = knowAlpha * 0.95f), RoundedCornerShape(32.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Refresh,
-                                                contentDescription = "To review",
-                                                tint = Warning,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                text = "To review",
-                                                color = Warning,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
-
-                                    // "I knew it!" - zov medesn, leitner box++
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(52.dp)
-                                            .clip(RoundedCornerShape(14.dp))
-                                            .background(Success.copy(alpha = 0.10f))
-                                            .border(
-                                                width = 2.dp,
-                                                color = Success,
-                                                shape = RoundedCornerShape(14.dp)
-                                            )
-                                            .clickable {
-                                                currentCard?.let { card ->
-                                                    // Leitner box-iig 1-eer nemiiye, max 5
-                                                    val newBox = minOf(5, card.leitnerBox + 1)
-                                                    val updated = card.copy(
-                                                        leitnerBox = newBox,
-                                                        needsReview = newBox < 5
-                                                    )
-                                                    repository.updateCard(deckId, updated)
-                                                    deck = repository.getDeckById(deckId)
-                                                    correctCount++
-                                                    nextCard()
-                                                }
-                                            },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Check,
-                                                contentDescription = "I knew it",
-                                                tint = Success,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                text = "I knew it!",
-                                                color = Success,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            // === Leitner 5 haiirtsuugiin vizual tuuz ===
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 24.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    val boxColors = listOf(
-                                        Danger, Warning, Primary, PrimaryVariant, Success
-                                    )
-                                    val currentBox = currentCard?.leitnerBox ?: 1
-
-                                    boxColors.forEachIndexed { index, color ->
-                                        val boxNumber = index + 1
-                                        val isActive = boxNumber == currentBox
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(6.dp)
-                                                .clip(RoundedCornerShape(3.dp))
-                                                .background(
-                                                    color.copy(
-                                                        alpha = if (isActive) 1f else 0.30f
-                                                    )
-                                                )
+                                        Text(
+                                            text = "Мэдэж байна",
+                                            color = Success,
+                                            fontSize = 32.sp,
+                                            fontWeight = FontWeight.Black,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.alpha(knowAlpha)
                                         )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                // Leitner strip-iin tailbar
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = "← Буруу: Хайрцаг 1",
-                                        fontSize = 10.sp,
-                                        color = Danger
-                                    )
-                                    Text(
-                                        text = "Зөв: Ахина →",
-                                        fontSize = 10.sp,
-                                        color = Success
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            // === Navigatsiin muriig: omnoh/algasah ===
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 24.dp, vertical = 12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                // Omnoh kart ruu harj bolno
-                                TextButton(
-                                    onClick = {
-                                        if (currentIndex > 0) {
-                                            currentIndex--
-                                            isFlipped = false
-                                        }
-                                    },
-                                    enabled = currentIndex > 0
-                                ) {
-                                    Text(
-                                        text = "← Өмнөх",
-                                        color = if (currentIndex > 0) TextMuted
-                                        else TextMuted.copy(alpha = 0.3f),
-                                        fontSize = 14.sp
-                                    )
-                                }
-
-                                // Leitner-gue algasna
-                                TextButton(
-                                    onClick = { nextCard() }
-                                ) {
-                                    Text(
-                                        text = "Алгасах →",
-                                        color = TextMuted,
-                                        fontSize = 14.sp
-                                    )
+                                if (reviewAlpha > 0f) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(Surface.copy(alpha = reviewAlpha * 0.95f), RoundedCornerShape(32.dp)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "Давтах",
+                                            color = Warning,
+                                            fontSize = 32.sp,
+                                            fontWeight = FontWeight.Black,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.alpha(reviewAlpha)
+                                        )
+                                    }
                                 }
                             }
                         }

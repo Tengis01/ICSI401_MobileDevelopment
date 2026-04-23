@@ -144,8 +144,6 @@ fun CardEditorScreen(
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
-
             // Ner tomyoo oruulah talbar (term, zaavaltai)
             OutlinedTextField(
                 value = term,
@@ -183,7 +181,7 @@ fun CardEditorScreen(
                     if (it.isNotBlank()) defError = false
                 },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Тайлбар / Орчуулга *") },
+                label = { Text("Тайлбар / Хариулт *") },
                 placeholder = { Text("Жишээ: алим, жимс...") },
                 isError = defError,
                 supportingText = if (defError) {

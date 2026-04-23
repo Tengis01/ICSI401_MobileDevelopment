@@ -52,6 +52,13 @@ import com.example.flashstudy.ui.theme.TextMuted
 import com.example.flashstudy.ui.theme.TextPrimary
 import com.example.flashstudy.ui.theme.White
 
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.runtime.DisposableEffect
+import java.util.UUID
+
 // Deck uusgeh ba zasvarlahin delgets
 // deckId null bol shine uusgene, ugui bol odoo baiigaagiig zasna
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,18 +66,36 @@ import com.example.flashstudy.ui.theme.White
 fun CreateEditDeckScreen(
     repository: DeckRepository,
     deckId: String?,
+    isFolder: Boolean = false,
+    folderIdToLink: String? = null,
     onNavigateBack: () -> Unit,
     onNavigateToCardEditor: (String, String?) -> Unit
 ) {
-    // Odoo baigaa deck-iig tatah, deckId null bol null
-    val existingDeck = remember(deckId) {
-        deckId?.let { repository.getDeckById(it) }
+    // Generate a stable ID for new decks so state is preserved across navigations
+    val currentDeckId = rememberSaveable { deckId ?: UUID.randomUUID().toString() }
+
+    // Odoo baigaa deck-iig tatah
+    var existingDeck by remember { mutableStateOf(repository.getDeckById(currentDeckId)) }
+
+    // Refresh on resume to catch new cards added in CardEditorScreen
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                existingDeck = repository.getDeckById(currentDeckId)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Form state-uuruud
-    var name by remember { mutableStateOf(existingDeck?.name ?: "") }
-    var description by remember { mutableStateOf(existingDeck?.description ?: "") }
-    var cards by remember { mutableStateOf(existingDeck?.cards ?: emptyList()) }
+    // Form state-uuruud (preserve text input using rememberSaveable)
+    var name by rememberSaveable { mutableStateOf(existingDeck?.name ?: "") }
+    var description by rememberSaveable { mutableStateOf(existingDeck?.description ?: "") }
+    
+    // Cards should derive from existingDeck
+    val cards = existingDeck?.cards ?: emptyList()
+    
     var nameError by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -110,10 +135,18 @@ fun CreateEditDeckScreen(
                                 description = description.trim(),
                                 cards = cards
                             ) ?: Deck(
+                                id = currentDeckId,
                                 name = name.trim(),
-                                description = description.trim()
+                                description = description.trim(),
+                                isFolder = isFolder
                             )
                             repository.saveDeck(newDeck)
+                            
+                            // Link to folder if provided
+                            if (folderIdToLink != null) {
+                                repository.addDeckToFolder(folderIdToLink, currentDeckId)
+                            }
+                            
                             onNavigateBack()
                         }
                     ) {
@@ -138,8 +171,6 @@ fun CreateEditDeckScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
             // Bagtsiin ner oruulah talbar
             OutlinedTextField(
                 value = name,
@@ -256,11 +287,15 @@ fun CreateEditDeckScreen(
                                         description = description.trim(),
                                         cards = cards
                                     ) ?: Deck(
+                                        id = currentDeckId,
                                         name = if (name.isBlank()) "Нэргүй багц" else name.trim(),
                                         description = description.trim(),
                                         cards = cards
                                     )
                                     repository.saveDeck(savedDeck)
+                                    if (folderIdToLink != null) {
+                                        repository.addDeckToFolder(folderIdToLink, currentDeckId)
+                                    }
                                     onNavigateToCardEditor(savedDeck.id, card.id)
                                 },
                                 modifier = Modifier.size(32.dp)
@@ -273,11 +308,13 @@ fun CreateEditDeckScreen(
                                 )
                             }
 
-                            // Ustgah button - jagsaaltaas hasna
                             IconButton(
                                 onClick = {
-                                    cards = cards.toMutableList().apply {
-                                        removeAt(index)
+                                    if (existingDeck != null) {
+                                        val updatedCards = cards.toMutableList().apply { removeAt(index) }
+                                        val newDeck = existingDeck!!.copy(cards = updatedCards)
+                                        repository.saveDeck(newDeck)
+                                        existingDeck = newDeck
                                     }
                                 },
                                 modifier = Modifier.size(32.dp)
@@ -312,11 +349,15 @@ fun CreateEditDeckScreen(
                                     description = description.trim(),
                                     cards = cards
                                 ) ?: Deck(
+                                    id = currentDeckId,
                                     name = if (name.isBlank()) "Нэргүй багц" else name.trim(),
                                     description = description.trim(),
                                     cards = cards
                                 )
                                 repository.saveDeck(savedDeck)
+                                if (folderIdToLink != null) {
+                                    repository.addDeckToFolder(folderIdToLink, currentDeckId)
+                                }
                                 onNavigateToCardEditor(savedDeck.id, null)
                             },
                         shape = RoundedCornerShape(16.dp),

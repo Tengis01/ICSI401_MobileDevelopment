@@ -30,15 +30,15 @@ import androidx.compose.ui.unit.sp
 // Light color scheme - Material3 color system
 private val FlashStudyColorScheme = lightColorScheme(
     primary = Primary,
-    onPrimary = White,
-    primaryContainer = PrimaryVariant,
+    onPrimary = OnPrimary,
+    primaryContainer = PrimaryContainer,
     onPrimaryContainer = TextPrimary,
     background = Background,
     onBackground = TextPrimary,
     surface = Surface,
     onSurface = TextPrimary,
-    surfaceVariant = Color(0xFFE8F4FF),
-    onSurfaceVariant = TextMuted,
+    surfaceVariant = SurfaceVariant,
+    onSurfaceVariant = TextSecondary,
     error = Danger,
     onError = White
 )
@@ -66,22 +66,16 @@ fun FlashStudyTheme(content: @Composable () -> Unit) {
 // Dahin ashiglagdah uildiin composable-uud
 // ============================================================
 
-// Deeguurees dooshoo gradient aryn orc - buh delgetsuudiin daraa ashiglana
+// Niitleg aryn devsger - Light theme-d tohirson
 @Composable
 fun GradientBackground(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val gradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFFF0FFFE),
-            Color(0xFFE8F4FF)
-        )
-    )
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(brush = gradient)
+            .background(color = Background)
     ) {
         content()
     }
@@ -128,37 +122,33 @@ fun LeitnerBadge(
     }
 }
 
-// Gradient teal tomor button - undsen CTA-d ashiglana
 @Composable
 fun PrimaryGradientButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val gradientBrush = Brush.horizontalGradient(
-        colors = listOf(Primary, PrimaryVariant)
-    )
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
             .shadow(
-                elevation = 6.dp,
-                shape = RoundedCornerShape(18.dp),
-                ambientColor = Primary.copy(alpha = 0.3f),
-                spotColor = Primary.copy(alpha = 0.3f)
+                elevation = 4.dp,
+                shape = RoundedCornerShape(28.dp),
+                ambientColor = Primary.copy(alpha = 0.5f),
+                spotColor = Primary.copy(alpha = 0.5f)
             )
-            .clip(RoundedCornerShape(18.dp))
-            .background(brush = gradientBrush)
+            .clip(RoundedCornerShape(28.dp))
+            .background(color = Primary)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = White,
+            color = OnPrimary,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 0.3.sp
+            letterSpacing = 0.5.sp
         )
     }
 }

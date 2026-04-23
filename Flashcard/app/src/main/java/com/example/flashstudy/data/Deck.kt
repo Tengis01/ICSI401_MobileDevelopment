@@ -10,5 +10,6 @@ data class Deck(
     val name: String,
     val description: String = "",
     val cards: List<FlashCard> = emptyList(),
-    val lastStudied: Long = 0L
+    val lastStudied: Long = 0L,
+    val isFolder: Boolean = false
 )

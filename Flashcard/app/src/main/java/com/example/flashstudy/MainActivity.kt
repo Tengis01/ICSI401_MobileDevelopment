@@ -12,12 +12,16 @@ import com.example.flashstudy.navigation.AppNavigation
 import com.example.flashstudy.ui.theme.FlashStudyTheme
 import com.example.flashstudy.ui.theme.GradientBackground
 
+import androidx.room.Room
+import com.example.flashstudy.data.local.FlashStudyDatabase
+
 // FlashStudy app-iin gantskhaan Activity
 // Buh delgetsuud Compose composable-iin togtoltsood ajillana
 class MainActivity : ComponentActivity() {
 
     // Repository-g activity level-d ekhluulne - context shaardagdana
     private lateinit var repository: DeckRepository
+    private lateinit var database: FlashStudyDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,8 +29,12 @@ class MainActivity : ComponentActivity() {
         // Edge-to-edge display idewhjuulne
         enableEdgeToEdge()
 
-        // Repository-g application context-eer ekhluulne - memory leak-aas zailsna
-        repository = DeckRepository(applicationContext)
+        database = Room.databaseBuilder(
+            applicationContext,
+            FlashStudyDatabase::class.java, "flashstudy_db"
+        ).fallbackToDestructiveMigration().allowMainThreadQueries().build() // For simple migration
+        
+        repository = DeckRepository(database.deckDao())
 
         setContent {
             FlashStudyTheme {
