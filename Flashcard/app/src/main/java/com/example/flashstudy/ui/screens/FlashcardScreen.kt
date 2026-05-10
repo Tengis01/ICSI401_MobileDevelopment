@@ -518,7 +518,7 @@ fun FlashcardScreen(
                                         Card(
                                             modifier = Modifier.fillMaxSize()
                                                 .graphicsLayer { 
-                                                    rotationY = rotation 
+                                                    rotationY = rotation - 180f
                                                     cameraDistance = 12f * densityValue
                                                 }
                                                 .border(

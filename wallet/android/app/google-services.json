@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "435489751845",
+    "project_id": "financialnote-a5b4c",
+    "storage_bucket": "financialnote-a5b4c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:435489751845:android:a28228eba0bbb2c87590cc",
+        "android_client_info": {
+          "package_name": "com.example.wallet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD99o8qOmOJaN_G9tJyS_jouyzLTjNAiVg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

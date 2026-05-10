@@ -1,0 +1,355 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../app/router.dart';
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_text_styles.dart';
+import '../../core/constants/app_constants.dart';
+import '../../models/transaction_model.dart';
+import '../../providers/transaction_provider.dart';
+import '../../services/notification_service.dart';
+import '../../widgets/app_button.dart';
+
+class SendSimulationScreen extends ConsumerStatefulWidget {
+  const SendSimulationScreen({super.key});
+
+  @override
+  ConsumerState<SendSimulationScreen> createState() =>
+      _SendSimulationScreenState();
+}
+
+class _SendSimulationScreenState
+    extends ConsumerState<SendSimulationScreen> {
+  final _recipientController = TextEditingController();
+  final _amountController    = TextEditingController();
+  final _noteController      = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _recipientController.dispose();
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  bool get _canSend =>
+      _recipientController.text.trim().isNotEmpty &&
+          _amountController.text.isNotEmpty &&
+          (int.tryParse(_amountController.text) ?? 0) > 0;
+
+  Future<void> _confirmAndSend() async {
+    if (!_canSend) return;
+
+    final amount     = int.parse(_amountController.text);
+    final recipient  = _recipientController.text.trim();
+    final note       = _noteController.text.trim();
+
+    // confirm dialog
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _ConfirmSheet(
+        recipient: recipient,
+        amount: amount,
+        onCancel: () => Navigator.pop(ctx, false),
+        onConfirm: () => Navigator.pop(ctx, true),
+      ),
+    );
+
+    if (confirmed != true) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      // firestore-d expense transaction hadgalah
+      final docRef = FirebaseFirestore.instance
+          .collection(AppConstants.usersCollection)
+          .doc(user.uid)
+          .collection(AppConstants.transactionsCollection)
+          .doc();
+
+      final tx = TransactionModel(
+        id: docRef.id,
+        userId: user.uid,
+        type: TransactionType.expense,
+        amount: amount,
+        categoryId: 'transfer',
+        categoryName: 'Шилжүүлэг',
+        categoryIcon: 'transfer',
+        note: note.isEmpty ? '$recipient-д шилжүүлэг' : note,
+        date: DateTime.now(),
+        createdAt: DateTime.now(),
+      );
+
+      await ref.read(transactionServiceProvider).addTransaction(tx);
+
+      // notification
+      await NotificationService.instance.showTransferNotification(
+        recipientName: recipient,
+        amount: amount,
+        isSend: true,
+      );
+
+      if (!mounted) return;
+      context.go(AppRoutes.home);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+        ),
+        title: const Text('Мөнгө илгээх'),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // simulation ankhaaruulga
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: const Color(0xFFFFCA28), width: 0.5),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded,
+                      color: Color(0xFFF59E0B), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Туршилтын горим — жинхэнэ мөнгө шилжихгүй, зөвхөн бүртгэл хадгалагдана.',
+                      style: AppTextStyles.bodySmall.copyWith(
+                          color: const Color(0xFFB45309)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+            // huvlaan avagch
+            _buildLabel('ХҮЛЭЭН АВАГЧ'),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _recipientController,
+              style: AppTextStyles.bodyLarge,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                hintText: 'Нэр эсвэл утасны дугаар',
+                prefixIcon: Icon(Icons.person_search_rounded,
+                    color: AppColors.textSecondary, size: 20),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // dun
+            _buildLabel('ДҮН'),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: AppTextStyles.bodyLarge,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                hintText: '0',
+                suffixText: '₮',
+                prefixIcon: Icon(Icons.attach_money_rounded,
+                    color: AppColors.textSecondary, size: 20),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // temdeglel
+            _buildLabel('ТЭМДЭГЛЭЛ (заавал биш)'),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _noteController,
+              style: AppTextStyles.bodyLarge,
+              decoration: const InputDecoration(
+                hintText: 'Тэмдэглэл нэмэх...',
+                prefixIcon: Icon(Icons.notes_rounded,
+                    color: AppColors.textSecondary, size: 20),
+              ),
+            ),
+            const SizedBox(height: 36),
+            ListenableBuilder(
+              listenable: Listenable.merge(
+                  [_recipientController, _amountController]),
+              builder: (context, _) => AppButton(
+                label: 'Илгээх',
+                onPressed: _canSend ? _confirmAndSend : null,
+                isLoading: _isLoading,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(text,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: AppColors.textSecondary,
+          fontSize: 11,
+          letterSpacing: 0.8,
+        ));
+  }
+}
+
+class _ConfirmSheet extends StatelessWidget {
+  final String recipient;
+  final int amount;
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
+
+  const _ConfirmSheet({
+    required this.recipient,
+    required this.amount,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  String _fmt(int v) => v.toString().replaceAllMapped(
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (m) => '${m[1]},',
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            width: 64, height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.arrow_upward_rounded,
+                color: AppColors.primary, size: 30),
+          ),
+          const SizedBox(height: 12),
+          Text('Шилжүүлэг баталгаажуулах',
+              style: AppTextStyles.h3),
+          const SizedBox(height: 4),
+          Text(
+            '${_fmt(amount)}₮ · $recipient-д',
+            style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 20),
+          // dun haruulah
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                _Row(label: 'Хүлээн авагч', value: recipient),
+                const Divider(height: 16),
+                _Row(
+                    label: 'Дүн',
+                    value: '${_fmt(amount)}₮',
+                    valueColor: AppColors.expense),
+                const Divider(height: 16),
+                _Row(label: 'Шимтгэл', value: 'Үнэгүй',
+                    valueColor: AppColors.income),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onCancel,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.border),
+                    minimumSize: const Size.fromHeight(52),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100)),
+                  ),
+                  child: const Text('Цуцлах',
+                      style: TextStyle(color: AppColors.textPrimary)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onConfirm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    minimumSize: const Size.fromHeight(52),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100)),
+                    elevation: 0,
+                  ),
+                  child: const Text('Илгээх',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _Row({required this.label, required this.value, this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label,
+            style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary)),
+        Text(value,
+            style: AppTextStyles.labelMedium.copyWith(
+                color: valueColor ?? AppColors.textPrimary)),
+      ],
+    );
+  }
+}
