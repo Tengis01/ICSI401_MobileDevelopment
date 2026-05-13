@@ -35,7 +35,7 @@ class _BalanceCardState extends State<BalanceCard> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha:0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -52,7 +52,7 @@ class _BalanceCardState extends State<BalanceCard> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha:0.7),
                   letterSpacing: 0.8,
                 ),
               ),
@@ -62,21 +62,26 @@ class _BalanceCardState extends State<BalanceCard> {
                   _isHidden
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha:0.7),
                   size: 20,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            _isHidden
-                ? '••••••• ₮'
-                : CurrencyFormatter.format(widget.totalBalance),
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _isHidden
+                  ? '••••••• ₮'
+                  : CurrencyFormatter.format(widget.totalBalance),
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+              maxLines: 1,
             ),
           ),
           const SizedBox(height: 16),
@@ -125,7 +130,7 @@ class _SummaryChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha:0.15),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -134,7 +139,7 @@ class _SummaryChip extends StatelessWidget {
             width: 24, height: 24,
             decoration: BoxDecoration(
               color: (isIncome ? AppColors.income : AppColors.expense)
-                  .withOpacity(0.25),
+                  .withValues(alpha:0.25),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
@@ -146,26 +151,33 @@ class _SummaryChip extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                    fontSize: 10, color: Colors.white.withOpacity(0.7)),
-              ),
-              Text(
-                isHidden
-                    ? '•••'
-                    : CurrencyFormatter.formatWithSign(amount,
-                    isIncome: isIncome),
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                      fontSize: 10, color: Colors.white.withValues(alpha:0.7)),
                 ),
-              ),
-            ],
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    isHidden
+                        ? '•••'
+                        : CurrencyFormatter.formatWithSign(amount,
+                        isIncome: isIncome),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
+import '../../providers/language_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../widgets/app_bottom_nav.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -20,12 +20,18 @@ class ProfileScreen extends ConsumerWidget {
       monthlyTransactionsProvider((year: now.year, month: now.month)),
     );
     final txCount = transactionsAsync.valueOrNull?.length ?? 0;
+    final language = ref.watch(languageProvider);
+    final currentPalette = ref.watch(themeProvider);
+    final currentPaletteName = AppColors.paletteInfo[currentPalette]!.name;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+        ),
         title: const Text('Профайл'),
       ),
       body: SingleChildScrollView(
@@ -54,18 +60,20 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                       Positioned(
-                        bottom: 0, right: 0,
+                        bottom: 0,
+                        right: 0,
                         child: Container(
-                          width: 26, height: 26,
+                          width: 26,
+                          height: 26,
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             shape: BoxShape.circle,
-                            border: Border.all(
-                                color: Colors.white, width: 2),
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
                           child: const Icon(
                             Icons.camera_alt_rounded,
-                            color: Colors.white, size: 12,
+                            color: Colors.white,
+                            size: 12,
                           ),
                         ),
                       ),
@@ -79,8 +87,8 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     user?.email ?? '',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 16),
                   // profile zasah button
@@ -110,31 +118,10 @@ class ProfileScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _StatItem(
-                            value: '$txCount',
-                            label: 'Энэ сарын\nгүйлгээ'),
+                            value: '$txCount', label: 'Энэ сарын\nгүйлгээ'),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            // theme songoh section
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Өнгөний загвар',
-                      style: AppTextStyles.labelLarge),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Өөрт таалагдах өнгөөр өөрчилнэ үү',
-                    style: AppTextStyles.bodySmall,
-                  ),
-                  const SizedBox(height: 16),
-                  const _ThemeSelector(),
                 ],
               ),
             ),
@@ -145,19 +132,24 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   _SettingsTile(
+                    icon: Icons.palette_outlined,
+                    label: 'Өнгөний загвар',
+                    trailing: Text(currentPaletteName),
+                    onTap: () => _showThemePicker(context),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _SettingsTile(
                     icon: Icons.notifications_outlined,
                     label: 'Мэдэгдэл',
                     trailing: const Text('Идэвхтэй'),
-                    onTap: () =>
-                        context.push('/profile/notifications'),
+                    onTap: () => context.push('/profile/notifications'),
                   ),
                   const Divider(height: 1, indent: 56),
                   _SettingsTile(
                     icon: Icons.language_outlined,
                     label: 'Хэл',
-                    trailing: const Text('Монгол'),
-                    onTap: () =>
-                        context.push('/profile/language'),
+                    trailing: Text(language.label),
+                    onTap: () => context.push('/profile/language'),
                   ),
                   const Divider(height: 1, indent: 56),
                   _SettingsTile(
@@ -190,20 +182,17 @@ class ProfileScreen extends ConsumerWidget {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                       title: const Text('Гарах уу?'),
-                      content: const Text(
-                          'Акаунтаасаа гарахдаа итгэлтэй байна уу?'),
+                      content:
+                          const Text('Акаунтаасаа гарахдаа итгэлтэй байна уу?'),
                       actions: [
                         TextButton(
-                          onPressed: () =>
-                              Navigator.pop(ctx, false),
+                          onPressed: () => Navigator.pop(ctx, false),
                           child: const Text('Болих'),
                         ),
                         TextButton(
-                          onPressed: () =>
-                              Navigator.pop(ctx, true),
+                          onPressed: () => Navigator.pop(ctx, true),
                           child: Text('Гарах',
-                              style: TextStyle(
-                                  color: AppColors.error)),
+                              style: TextStyle(color: AppColors.error)),
                         ),
                       ],
                     ),
@@ -219,92 +208,173 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.entry),
-        backgroundColor: AppColors.primary,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add_rounded,
-            color: Colors.white, size: 28),
+    );
+  }
+
+  void _showThemePicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      floatingActionButtonLocation:
-      FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
+      builder: (_) => const _ThemePickerSheet(),
     );
   }
 }
 
-// theme selector widget
-class _ThemeSelector extends ConsumerWidget {
-  const _ThemeSelector();
+class _ThemePickerSheet extends ConsumerWidget {
+  const _ThemePickerSheet();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(themeProvider);
+    final palettes = AppPalette.values;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: AppPalette.values.map((palette) {
-        final info = AppColors.paletteInfo[palette]!;
-        final isSelected = current == palette;
-
-        return GestureDetector(
-          onTap: () =>
-              ref.read(themeProvider.notifier).setPalette(palette),
-          child: Column(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOut,
-                width: isSelected ? 52 : 44,
-                height: isSelected ? 52 : 44,
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      info.gradientStart,
-                      info.gradientEnd,
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                  border: isSelected
-                      ? Border.all(
-                    color: AppColors.textPrimary,
-                    width: 2.5,
-                  )
-                      : null,
-                  boxShadow: isSelected
-                      ? [
-                    BoxShadow(
-                      color: info.color.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    )
-                  ]
-                      : null,
-                ),
-                child: isSelected
-                    ? const Icon(Icons.check_rounded,
-                    color: Colors.white, size: 22)
-                    : null,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                info.name,
-                style: AppTextStyles.bodySmall.copyWith(
-                  fontSize: 10,
-                  color: isSelected
-                      ? info.color
-                      : AppColors.textSecondary,
-                  fontWeight: isSelected
-                      ? FontWeight.w600
-                      : FontWeight.w400,
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ],
+            ),
+            const SizedBox(height: 20),
+            Text('Өнгөний загвар', style: AppTextStyles.h3),
+            const SizedBox(height: 6),
+            Text(
+              'Аппын үндсэн өнгөө сонгоно уу',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _ThemePickerRow(
+              palettes: palettes.take(2).toList(),
+              current: current,
+            ),
+            const SizedBox(height: 16),
+            _ThemePickerRow(
+              palettes: palettes.skip(2).take(2).toList(),
+              current: current,
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: SizedBox(
+                width: (MediaQuery.of(context).size.width - 64) / 2,
+                child: _ThemeOption(
+                  palette: palettes.last,
+                  isSelected: current == palettes.last,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemePickerRow extends StatelessWidget {
+  final List<AppPalette> palettes;
+  final AppPalette current;
+
+  const _ThemePickerRow({
+    required this.palettes,
+    required this.current,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < palettes.length; i++) ...[
+          Expanded(
+            child: _ThemeOption(
+              palette: palettes[i],
+              isSelected: current == palettes[i],
+            ),
           ),
-        );
-      }).toList(),
+          if (i != palettes.length - 1) const SizedBox(width: 16),
+        ],
+      ],
+    );
+  }
+}
+
+class _ThemeOption extends ConsumerWidget {
+  final AppPalette palette;
+  final bool isSelected;
+
+  const _ThemeOption({
+    required this.palette,
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final info = AppColors.paletteInfo[palette]!;
+
+    return InkWell(
+      onTap: () => ref.read(themeProvider.notifier).setPalette(palette),
+      borderRadius: BorderRadius.circular(18),
+      child: Column(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 92,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [info.gradientStart, info.gradientEnd],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isSelected ? AppColors.textPrimary : AppColors.border,
+                width: isSelected ? 2 : 1,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: info.color.withValues(alpha: 0.28),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: isSelected
+                ? const Center(
+                    child: Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            info.name,
+            style: AppTextStyles.labelMedium.copyWith(
+              color: isSelected ? info.color : AppColors.textSecondary,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -319,12 +389,9 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value,
-            style: AppTextStyles.h2.copyWith(
-                color: AppColors.primary)),
+        Text(value, style: AppTextStyles.h2.copyWith(color: AppColors.primary)),
         Text(label,
-            style: AppTextStyles.bodySmall,
-            textAlign: TextAlign.center),
+            style: AppTextStyles.bodySmall, textAlign: TextAlign.center),
       ],
     );
   }
@@ -352,33 +419,33 @@ class _SettingsTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       leading: Container(
-        width: 36, height: 36,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
-          color: (iconColor ?? AppColors.primary).withOpacity(0.1),
+          color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon,
-            color: iconColor ?? AppColors.primary, size: 20),
+        child: Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
       ),
       title: Text(label,
-          style: AppTextStyles.labelMedium.copyWith(
-              color: labelColor ?? AppColors.textPrimary)),
+          style: AppTextStyles.labelMedium
+              .copyWith(color: labelColor ?? AppColors.textPrimary)),
       trailing: trailing != null
           ? Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DefaultTextStyle(
-            style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary),
-            child: trailing!,
-          ),
-          const SizedBox(width: 4),
-          const Icon(Icons.chevron_right_rounded,
-              color: AppColors.textSecondary, size: 20),
-        ],
-      )
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DefaultTextStyle(
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.textSecondary),
+                  child: trailing!,
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary, size: 20),
+              ],
+            )
           : const Icon(Icons.chevron_right_rounded,
-          color: AppColors.textSecondary, size: 20),
+              color: AppColors.textSecondary, size: 20),
     );
   }
 }

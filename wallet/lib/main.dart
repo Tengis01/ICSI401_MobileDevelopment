@@ -23,5 +23,5 @@ void main() async {
     ),
   );
 
-  runApp(const ProviderScope(child: FinTrackApp()));
+  runApp(const ProviderScope(child: FinancialNoteApp()));
 }

@@ -37,6 +37,14 @@ class TransactionService {
         snap.docs.map((doc) => TransactionModel.fromFirestore(doc)).toList());
   }
 
+  Stream<List<TransactionModel>> getAllTransactions(String userId) {
+    return _txCollection(userId)
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snap) =>
+        snap.docs.map((doc) => TransactionModel.fromFirestore(doc)).toList());
+  }
+
   Future<List<TransactionModel>> searchTransactions(
       String userId, String query) async {
     final q = query.toLowerCase();

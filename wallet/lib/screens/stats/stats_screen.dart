@@ -5,7 +5,6 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
-import '../../models/transaction_model.dart';
 import '../../providers/transaction_provider.dart';
 import '../../widgets/app_bottom_nav.dart';
 
@@ -46,8 +45,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final transactionsAsync = ref.watch(
-      monthlyTransactionsProvider((year: _year, month: _month)),
+    final statsAsync = ref.watch(
+      monthlyStatsProvider((year: _year, month: _month)),
     );
     final now = DateTime.now();
     final isCurrentMonth = _year == now.year && _month == now.month;
@@ -60,9 +59,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         title: const Text('Статистик'),
         centerTitle: false,
       ),
-      body: transactionsAsync.when(
-        data: (transactions) => _StatsBody(
-          transactions: transactions,
+      body: statsAsync.when(
+        data: (stats) => _StatsBody(
+          stats: stats,
           year: _year,
           month: _month,
           isCurrentMonth: isCurrentMonth,
@@ -88,7 +87,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 }
 
 class _StatsBody extends StatelessWidget {
-  final List<TransactionModel> transactions;
+  final MonthlyStats stats;
   final int year;
   final int month;
   final bool isCurrentMonth;
@@ -96,7 +95,7 @@ class _StatsBody extends StatelessWidget {
   final VoidCallback onNext;
 
   const _StatsBody({
-    required this.transactions,
+    required this.stats,
     required this.year,
     required this.month,
     required this.isCurrentMonth,
@@ -106,27 +105,10 @@ class _StatsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // niilber too
-    int totalIncome = 0;
-    int totalExpense = 0;
-    for (final tx in transactions) {
-      if (tx.type == TransactionType.income) {
-        totalIncome += tx.amount;
-      } else {
-        totalExpense += tx.amount;
-      }
-    }
-    final savings = totalIncome - totalExpense;
-
-    // zarlaga angilalaar bulegleh
-    final Map<String, int> categoryTotals = {};
-    for (final tx in transactions
-        .where((t) => t.type == TransactionType.expense)) {
-      categoryTotals[tx.categoryName] =
-          (categoryTotals[tx.categoryName] ?? 0) + tx.amount;
-    }
-    final sortedCategories = categoryTotals.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final totalIncome = stats.totalIncome;
+    final totalExpense = stats.totalExpense;
+    final savings = stats.savings;
+    final sortedCategories = stats.sortedCategories;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -221,7 +203,7 @@ class _StatsBody extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           // guriljaa alga baiwal
-          if (transactions.isEmpty)
+          if (sortedCategories.isEmpty && totalIncome == 0)
             Container(
               padding: const EdgeInsets.all(40),
               decoration: BoxDecoration(
@@ -382,9 +364,13 @@ class _SummaryItem extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        Text(
-          CurrencyFormatter.format(amount),
-          style: AppTextStyles.labelLarge.copyWith(color: color),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            CurrencyFormatter.format(amount),
+            style: AppTextStyles.labelLarge.copyWith(color: color),
+            maxLines: 1,
+          ),
         ),
       ],
     );

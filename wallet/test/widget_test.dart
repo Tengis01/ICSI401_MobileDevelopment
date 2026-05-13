@@ -7,17 +7,21 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wallet/app/app.dart';
 
 void main() {
   testWidgets('app boots', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+
     await tester.pumpWidget(
       const ProviderScope(
-        child: FinTrackApp(),
+        child: FinancialNoteApp(),
       ),
     );
+    await tester.pump(const Duration(seconds: 3));
 
-    expect(find.byType(FinTrackApp), findsOneWidget);
+    expect(find.byType(FinancialNoteApp), findsOneWidget);
   });
 }

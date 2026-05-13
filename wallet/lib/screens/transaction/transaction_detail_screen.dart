@@ -133,7 +133,7 @@ class _TransactionDetailView extends ConsumerWidget {
                   Container(
                     width: 64, height: 64,
                     decoration: BoxDecoration(
-                      color: catColor.withOpacity(0.15),
+                      color: catColor.withValues(alpha:0.15),
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Icon(iconData, color: catColor, size: 30),

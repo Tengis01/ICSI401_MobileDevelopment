@@ -300,7 +300,7 @@ class _CardPreview extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha:0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -345,7 +345,7 @@ class _CardPreview extends StatelessWidget {
                     'CARD HOLDER',
                     style: TextStyle(
                       fontSize: 9,
-                      color: Colors.white.withOpacity(0.65),
+                      color: Colors.white.withValues(alpha:0.65),
                     ),
                   ),
                   Text(
@@ -365,7 +365,7 @@ class _CardPreview extends StatelessWidget {
                     'EXPIRES',
                     style: TextStyle(
                       fontSize: 9,
-                      color: Colors.white.withOpacity(0.65),
+                      color: Colors.white.withValues(alpha:0.65),
                     ),
                   ),
                   Text(

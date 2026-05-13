@@ -40,16 +40,10 @@ class AppBottomNav extends StatelessWidget {
               onTap: () => context.go(AppRoutes.search),
             ),
             _NavItem(
-              icon: Icons.person_outline_rounded,
-              label: 'Профайл',
-              isActive: currentIndex == 3,
-              onTap: () => context.go(AppRoutes.profile),
-            ),
-            _NavItem(
               icon: Icons.account_balance_wallet_outlined,
               label: 'Хэтэвч',
-              isActive: currentIndex == 1,
-              onTap: () => context.go(AppRoutes.wallet),  // ← энийг нэмэх
+              isActive: currentIndex == 3,
+              onTap: () => context.go(AppRoutes.wallet),
             ),
           ],
         ),

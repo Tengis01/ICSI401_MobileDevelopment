@@ -32,11 +32,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(milliseconds: 900),
     );
     _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animController,
+      CurvedAnimation(
+          parent: _animController,
           curve: const Interval(0.0, 0.6, curve: Curves.easeOut)),
     );
     _scaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _animController,
+      CurvedAnimation(
+          parent: _animController,
           curve: const Interval(0.0, 0.6, curve: Curves.easeOut)),
     );
     _animController.forward();
@@ -46,7 +48,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await Future.delayed(AppConstants.splashDuration);
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
-    final onboardingSeen = prefs.getBool(AppConstants.onboardingSeenKey) ?? false;
+    final onboardingSeen =
+        prefs.getBool(AppConstants.onboardingSeenKey) ?? false;
     if (!mounted) return;
     context.go(onboardingSeen ? AppRoutes.login : AppRoutes.onboarding);
   }
@@ -82,47 +85,58 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 88, height: 88,
+                        width: 88,
+                        height: 88,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: const Icon(
                           Icons.account_balance_wallet_rounded,
-                          color: Colors.white, size: 44,
+                          color: Colors.white,
+                          size: 44,
                         ),
                       ),
                       const SizedBox(height: 20),
                       RichText(
                         text: const TextSpan(children: [
                           TextSpan(
-                            text: 'Fin',
-                            style: TextStyle(fontSize: 34,
-                                fontWeight: FontWeight.w300, color: Colors.white),
+                            text: 'Financial ',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w300,
+                              color: Colors.white,
+                            ),
                           ),
                           TextSpan(
-                            text: 'Track',
-                            style: TextStyle(fontSize: 34,
-                                fontWeight: FontWeight.w700, color: Colors.white),
+                            text: 'Note',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ]),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Ухаалаг санхүүгийн менежмент',
-                        style: TextStyle(fontSize: 14,
-                            color: Colors.white.withOpacity(0.75)),
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withValues(alpha: 0.75)),
                       ),
                     ],
                   ),
                 ),
               ),
               Positioned(
-                bottom: 24, left: 0, right: 0,
+                bottom: 24,
+                left: 0,
+                right: 0,
                 child: Text(
                   'Хувилбар 1.0.0',
-                  style: TextStyle(fontSize: 12,
-                      color: Colors.white.withOpacity(0.5)),
+                  style: TextStyle(
+                      fontSize: 12, color: Colors.white.withValues(alpha: 0.5)),
                   textAlign: TextAlign.center,
                 ),
               ),

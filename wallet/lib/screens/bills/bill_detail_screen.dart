@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
-import '../../app/theme/app_text_styles.dart';
 import '../../core/constants/bill_data.dart';
 import '../../models/bill_model.dart';
 import '../../widgets/app_button.dart';
@@ -64,6 +63,7 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
             // amount card
             Container(
               width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -74,15 +74,13 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
                   Container(
                     width: 56, height: 56,
                     decoration: BoxDecoration(
-                      color: bill.iconColor.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(16),
+                      color: bill.bgIconColor,
+                      shape: BoxShape.circle,
                     ),
-                    child: Icon(bill.icon,
-                        color: bill.iconColor, size: 28),
+                    child: Icon(bill.icon, color: bill.iconColor, size: 28),
                   ),
                   const SizedBox(height: 12),
-                  Text('Нийт төлбөл зохих',
-                      style: AppTextStyles.bodySmall),
+                  Text('Нийт төлбөл зохих', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                   const SizedBox(height: 4),
                   // custom amount baiwal input haruulah
                   if (bill.isCustomAmount)
@@ -122,9 +120,9 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
                     )
                   else
                     Text(
-                      '${_fmt(bill.amount!)}₮',
+                      '${_fmt(bill.amount!)} ₮',
                       style: const TextStyle(
-                        fontSize: 28,
+                        fontSize: 30,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
@@ -133,14 +131,12 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
                     const SizedBox(height: 4),
                     Text(
                       'Сүүлчийн хугацаа: ${bill.dueDate}',
-                      style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.expense),
+                      style: const TextStyle(fontSize: 12, color: AppColors.expense),
                     ),
                   ],
                 ],
               ),
             ),
-            const SizedBox(height: 16),
             // delgerengui
             Container(
               decoration: BoxDecoration(
@@ -149,40 +145,51 @@ class _BillDetailScreenState extends State<BillDetailScreen> {
               ),
               child: Column(
                 children: [
-                  _InfoRow(
-                      label: 'Үйлчилгээ', value: bill.provider),
+                  _InfoRow(label: 'Үйлчилгээ', value: bill.provider),
                   if (bill.accountNumber != null) ...[
-                    const Divider(height: 1, indent: 16),
-                    _InfoRow(
-                        label: 'Гэрээний дугаар',
-                        value: bill.accountNumber!),
+                    const Divider(height: 0.5, color: AppColors.border, indent: 0, endIndent: 0),
+                    _InfoRow(label: 'Гэрээний дугаар', value: bill.accountNumber!),
+                  ],
+                  if (bill.id == 'tsahilgaan') ...[
+                    const Divider(height: 0.5, color: AppColors.border, indent: 0, endIndent: 0),
+                    _InfoRow(label: 'Хэрэглээ', value: '245 кВт/цаг'),
                   ],
                   if (!bill.isCustomAmount) ...[
-                    const Divider(height: 1, indent: 16),
-                    _InfoRow(
-                        label: 'Дүн',
-                        value: '${_fmt(bill.amount!)}₮'),
+                    const Divider(height: 0.5, color: AppColors.border, indent: 0, endIndent: 0),
+                    _InfoRow(label: 'Дүн', value: '${_fmt(bill.amount!)}₮'),
                   ],
-                  const Divider(height: 1, indent: 16),
-                  _InfoRow(
-                      label: 'Тооцооны сар',
-                      value: '2026 оны 4-р сар'),
+                  const Divider(height: 0.5, color: AppColors.border, indent: 0, endIndent: 0),
+                  const _InfoRow(label: 'Тооцооны сар', value: '2026 оны 4-р сар'),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
-            StatefulBuilder(
-              builder: (context, _) => AppButton(
-                label: 'Үргэлжлүүлэх',
-                onPressed: _canProceed
-                    ? () => context.push(
-                  AppRoutes.billMethod(widget.serviceId),
-                  extra: _finalAmount,
-                )
-                    : null,
-              ),
-            ),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 32, top: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6C47FF).withValues(alpha:0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: AppButton(
+              label: 'Үргэлжлүүлэх',
+              onPressed: _canProceed
+                  ? () => context.push(
+                AppRoutes.billMethodPath(widget.serviceId),
+                extra: _finalAmount,
+              )
+                  : null,
+            ),
+          ),
         ),
       ),
     );
@@ -197,15 +204,14 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary)),
-          Text(value, style: AppTextStyles.labelMedium),
+          Text(label, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w400)),
+          Text(value, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
         ],
       ),
     );

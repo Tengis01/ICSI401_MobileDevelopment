@@ -38,11 +38,9 @@ class _WalletScreenState extends State<WalletScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Карт устгах уу?'),
-        content: const Text(
-            'Энэ картыг устгахдаа итгэлтэй байна уу?'),
+        content: const Text('Энэ картыг устгахдаа итгэлтэй байна уу?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -50,8 +48,7 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Устгах',
-                style: TextStyle(color: AppColors.error)),
+            child: Text('Устгах', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -65,11 +62,6 @@ class _WalletScreenState extends State<WalletScreen> {
     }
   }
 
-  String _fmt(int v) => v.toString().replaceAllMapped(
-    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]},',
-  );
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,35 +74,30 @@ class _WalletScreenState extends State<WalletScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _cards.isEmpty
-          ? _EmptyWallet(
-        onAddCard: () async {
-          final result =
-          await context.push(AppRoutes.addCard);
-          if (result == true) _loadCards();
-        },
-      )
-          : _WalletContent(
-        cards: _cards,
-        selectedIndex: _selectedIndex,
-        onPageChanged: (i) =>
-            setState(() => _selectedIndex = i),
-        onAddCard: () async {
-          final result =
-          await context.push(AppRoutes.addCard);
-          if (result == true) _loadCards();
-        },
-        onDeleteCard: _deleteCard,
-      ),
+              ? _EmptyWallet(
+                  onAddCard: () async {
+                    final result = await context.push(AppRoutes.addCard);
+                    if (result == true) _loadCards();
+                  },
+                )
+              : _WalletContent(
+                  cards: _cards,
+                  selectedIndex: _selectedIndex,
+                  onPageChanged: (i) => setState(() => _selectedIndex = i),
+                  onAddCard: () async {
+                    final result = await context.push(AppRoutes.addCard);
+                    if (result == true) _loadCards();
+                  },
+                  onDeleteCard: _deleteCard,
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.entry),
         backgroundColor: AppColors.primary,
         shape: const CircleBorder(),
-        child: const Icon(Icons.add_rounded,
-            color: Colors.white, size: 28),
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
       ),
-      floatingActionButtonLocation:
-      FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
     );
   }
 }
@@ -131,9 +118,9 @@ class _WalletContent extends StatelessWidget {
   });
 
   String _fmt(int v) => v.toString().replaceAllMapped(
-    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
         (m) => '${m[1]},',
-  );
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -144,25 +131,32 @@ class _WalletContent extends StatelessWidget {
         const SizedBox(height: 16),
         // kart carousel
         SizedBox(
-          height: 200,
-          child: PageView.builder(
-            padEnds: false,
-            controller: PageController(
-              viewportFraction: 0.85,
-              initialPage: selectedIndex,
-            ),
-            itemCount: cards.length,
-            onPageChanged: onPageChanged,
-            itemBuilder: (context, index) {
-              final card = cards[index];
-              final isActive = index == selectedIndex;
-              return AnimatedScale(
-                scale: isActive ? 1.0 : 0.92,
-                duration: const Duration(milliseconds: 300),
-                child: GestureDetector(
-                  onLongPress: () => onDeleteCard(card.id),
-                  child: _CardWidget(card: card),
+          height: 196,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final viewportFraction = constraints.maxWidth < 380 ? 0.92 : 0.88;
+
+              return PageView.builder(
+                padEnds: true,
+                clipBehavior: Clip.none,
+                controller: PageController(
+                  viewportFraction: viewportFraction,
+                  initialPage: selectedIndex,
                 ),
+                itemCount: cards.length,
+                onPageChanged: onPageChanged,
+                itemBuilder: (context, index) {
+                  final card = cards[index];
+                  final isActive = index == selectedIndex;
+                  return AnimatedScale(
+                    scale: isActive ? 1.0 : 0.94,
+                    duration: const Duration(milliseconds: 300),
+                    child: GestureDetector(
+                      onLongPress: () => onDeleteCard(card.id),
+                      child: _CardWidget(card: card),
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -178,9 +172,8 @@ class _WalletContent extends StatelessWidget {
               width: i == selectedIndex ? 20 : 6,
               height: 6,
               decoration: BoxDecoration(
-                color: i == selectedIndex
-                    ? AppColors.primary
-                    : AppColors.border,
+                color:
+                    i == selectedIndex ? AppColors.primary : AppColors.border,
                 borderRadius: BorderRadius.circular(3),
               ),
             );
@@ -202,8 +195,7 @@ class _WalletContent extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(selected.bankName,
-                          style: AppTextStyles.labelMedium),
+                      Text(selected.bankName, style: AppTextStyles.labelMedium),
                       Text(
                         '**** ${selected.last4}',
                         style: AppTextStyles.bodySmall,
@@ -213,8 +205,7 @@ class _WalletContent extends StatelessWidget {
                 ),
                 Text(
                   '${_fmt(selected.balance)}₮',
-                  style: AppTextStyles.h3.copyWith(
-                      color: AppColors.primary),
+                  style: AppTextStyles.h3.copyWith(color: AppColors.primary),
                 ),
               ],
             ),
@@ -226,8 +217,7 @@ class _WalletContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: OutlinedButton.icon(
             onPressed: onAddCard,
-            icon: Icon(Icons.add_rounded,
-                color: AppColors.primary, size: 18),
+            icon: Icon(Icons.add_rounded, color: AppColors.primary, size: 18),
             label: Text('Шинэ карт нэмэх',
                 style: TextStyle(color: AppColors.primary)),
             style: OutlinedButton.styleFrom(
@@ -239,8 +229,7 @@ class _WalletContent extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Row(
             children: [
               const Icon(Icons.info_outline_rounded,
@@ -248,8 +237,7 @@ class _WalletContent extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 'Карт удаан дарж устгах боломжтой',
-                style: AppTextStyles.bodySmall.copyWith(
-                    fontSize: 11),
+                style: AppTextStyles.bodySmall.copyWith(fontSize: 11),
               ),
             ],
           ),
@@ -279,7 +267,7 @@ class _CardWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.25),
+            color: AppColors.primary.withValues(alpha: 0.25),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -291,15 +279,20 @@ class _CardWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                card.bankName.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
+              Expanded(
+                child: Text(
+                  card.bankName.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
+              const SizedBox(width: 12),
               const Icon(Icons.credit_card_rounded,
                   color: Colors.white, size: 26),
             ],
@@ -308,11 +301,13 @@ class _CardWidget extends StatelessWidget {
           Text(
             card.maskedNumber,
             style: const TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w500,
               color: Colors.white,
-              letterSpacing: 2,
+              letterSpacing: 1.4,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 14),
           Row(
@@ -324,7 +319,7 @@ class _CardWidget extends StatelessWidget {
                   Text('CARD HOLDER',
                       style: TextStyle(
                           fontSize: 8,
-                          color: Colors.white.withOpacity(0.6))),
+                          color: Colors.white.withValues(alpha: 0.6))),
                   Text(
                     card.holderName.toUpperCase(),
                     style: const TextStyle(
@@ -340,7 +335,7 @@ class _CardWidget extends StatelessWidget {
                   Text('EXPIRES',
                       style: TextStyle(
                           fontSize: 8,
-                          color: Colors.white.withOpacity(0.6))),
+                          color: Colors.white.withValues(alpha: 0.6))),
                   Text(
                     card.expiryDate,
                     style: const TextStyle(
@@ -373,25 +368,26 @@ class _EmptyWallet extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 80, height: 80,
-              decoration: const BoxDecoration(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
                 color: AppColors.primaryLight,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.account_balance_wallet_rounded,
-                color: AppColors.primary, size: 36,
+                color: AppColors.primary,
+                size: 36,
               ),
             ),
             const SizedBox(height: 20),
             Text('Хэтэвч хоосон байна',
-                style: AppTextStyles.h3,
-                textAlign: TextAlign.center),
+                style: AppTextStyles.h3, textAlign: TextAlign.center),
             const SizedBox(height: 8),
             Text(
               'Эхний картаа холбоод банкны гүйлгээг автоматаар хянаж эхлээрэй.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary, height: 1.6),
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.textSecondary, height: 1.6),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 28),

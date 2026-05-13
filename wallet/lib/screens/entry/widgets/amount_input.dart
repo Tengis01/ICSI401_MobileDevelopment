@@ -49,8 +49,13 @@ class AmountInput extends StatelessWidget {
                       ? AppColors.textHint
                       : color,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: '0',
+                  hintStyle: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textHint,
+                  ),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,

@@ -65,12 +65,19 @@ class TransactionTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             // dun
-            Text(
-              CurrencyFormatter.formatWithSign(
-                transaction.amount,
-                isIncome: isIncome,
+            Flexible(
+              flex: 0,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  CurrencyFormatter.formatWithSign(
+                    transaction.amount,
+                    isIncome: isIncome,
+                  ),
+                  style: AppTextStyles.labelMedium.copyWith(color: amountColor),
+                  maxLines: 1,
+                ),
               ),
-              style: AppTextStyles.labelMedium.copyWith(color: amountColor),
             ),
           ],
         ),

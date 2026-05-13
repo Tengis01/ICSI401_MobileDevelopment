@@ -8,15 +8,15 @@ class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
-  static const _txKey      = 'notif_transaction';
+  static const _txKey = 'notif_transaction';
   static const _monthlyKey = 'notif_monthly';
-  static const _billKey    = 'notif_bill';
+  static const _billKey = 'notif_bill';
 
   Future<void> initialize() async {
     if (_initialized) return;
 
     const androidSettings =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const darwinSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -99,7 +99,7 @@ class NotificationService {
       id: 4,
       title: '📊 Сарын тайлан',
       body:
-      'Орлого ${_formatAmount(income)}₮ · Зарлага ${_formatAmount(expense)}₮ · Хэмнэлт ${_formatAmount(savings)}₮',
+          'Орлого ${_formatAmount(income)}₮ · Зарлага ${_formatAmount(expense)}₮ · Хэмнэлт ${_formatAmount(savings)}₮',
     );
   }
 
@@ -109,8 +109,8 @@ class NotificationService {
     required String body,
   }) async {
     const androidDetails = AndroidNotificationDetails(
-      'fintrack_channel',
-      'FinTrack мэдэгдэл',
+      'financial_note_channel',
+      'Financial Note мэдэгдэл',
       channelDescription: 'Гүйлгээ болон санхүүгийн мэдэгдэл',
       importance: Importance.high,
       priority: Priority.high,
@@ -134,8 +134,8 @@ class NotificationService {
   // 45000 -> "45,000"
   String _formatAmount(int amount) {
     return amount.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (m) => '${m[1]},',
-    );
+        );
   }
 }

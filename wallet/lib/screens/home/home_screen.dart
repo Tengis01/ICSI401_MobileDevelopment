@@ -6,14 +6,50 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../providers/transaction_provider.dart';
+import '../../services/app_notification_service.dart';
 import '../../widgets/transaction_tile.dart';
 import '../../widgets/app_bottom_nav.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/quick_actions_row.dart';
 import 'widgets/home_empty_state.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
+  final ValueNotifier<int> _unreadCount = ValueNotifier<int>(0);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshUnreadCount();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _unreadCount.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshUnreadCount();
+    }
+  }
+
+  Future<void> _refreshUnreadCount() async {
+    final count = await AppNotificationService.instance.unreadCount;
+    if (!mounted) return;
+    _unreadCount.value = count;
+  }
 
   void _showMoreSheet(BuildContext context) {
     showModalBottomSheet(
@@ -62,6 +98,14 @@ class HomeScreen extends ConsumerWidget {
                 context.push(AppRoutes.profile);
               },
             ),
+            _MoreItem(
+              icon: Icons.receipt_long_rounded,
+              label: 'Төлбөр',
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push(AppRoutes.bills);
+              },
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -70,20 +114,18 @@ class HomeScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final transactionsAsync = ref.watch(recentTransactionsProvider);
+    final balanceAsync = ref.watch(totalBalanceStreamProvider);
     final now = DateTime.now();
-    final summaryAsync = ref.watch(
-      monthSummaryProvider((year: now.year, month: now.month)),
-    );
 
     final hour = now.hour;
     final greeting = hour < 12
         ? 'Өглөөний мэнд'
         : hour < 17
-        ? 'Өдрийн мэнд'
-        : 'Оройн мэнд';
+            ? 'Өдрийн мэнд'
+            : 'Оройн мэнд';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -94,19 +136,24 @@ class HomeScreen extends ConsumerWidget {
               color: Colors.white,
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 8,
-                left: 20, right: 20, bottom: 20,
+                left: 20,
+                right: 20,
+                bottom: 20,
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppColors.primaryLight,
-                    child: Text(
-                      user?.displayName?.isNotEmpty == true
-                          ? user!.displayName![0].toUpperCase()
-                          : 'Б',
-                      style: AppTextStyles.labelLarge.copyWith(
-                          color: AppColors.primary),
+                  GestureDetector(
+                    onTap: () => context.push(AppRoutes.profile),
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: AppColors.primaryLight,
+                      child: Text(
+                        user?.displayName?.isNotEmpty == true
+                            ? user!.displayName![0].toUpperCase()
+                            : 'Б',
+                        style: AppTextStyles.labelLarge
+                            .copyWith(color: AppColors.primary),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -121,23 +168,47 @@ class HomeScreen extends ConsumerWidget {
                     ],
                   ),
                   const Spacer(),
-                  Stack(
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.notifications_outlined),
-                      ),
-                      Positioned(
-                        right: 10, top: 10,
-                        child: Container(
-                          width: 8, height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppColors.expense,
-                            shape: BoxShape.circle,
+                  ValueListenableBuilder<int>(
+                    valueListenable: _unreadCount,
+                    builder: (context, count, _) {
+                      return Stack(
+                        children: [
+                          IconButton(
+                            onPressed: () async {
+                              await context.push(AppRoutes.notifications);
+                              _refreshUnreadCount();
+                            },
+                            icon: const Icon(Icons.notifications_outlined),
                           ),
-                        ),
-                      ),
-                    ],
+                          if (count > 0)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minWidth: 18,
+                                  minHeight: 18,
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 5),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.expense,
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  count > 9 ? '9+' : '$count',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -145,15 +216,14 @@ class HomeScreen extends ConsumerWidget {
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
           SliverToBoxAdapter(
-            child: summaryAsync.when(
+            child: balanceAsync.when(
               data: (s) => BalanceCard(
-                totalBalance: s.income - s.expense,
+                totalBalance: s.balance,
                 income: s.income,
                 expense: s.expense,
               ),
               loading: () => const _SkeletonBox(
-                  height: 140,
-                  margin: EdgeInsets.symmetric(horizontal: 20)),
+                  height: 140, margin: EdgeInsets.symmetric(horizontal: 20)),
               error: (_, __) => const SizedBox(),
             ),
           ),
@@ -164,7 +234,7 @@ class HomeScreen extends ConsumerWidget {
               child: QuickActionsRow(
                 onSend: () => context.push(AppRoutes.send),
                 onReceive: () => context.push(AppRoutes.receive),
-                onTopUp: () => context.push(AppRoutes.bills),
+                onTopUp: () => context.push(AppRoutes.recharge),
                 onMore: () => _showMoreSheet(context),
               ),
             ),
@@ -180,8 +250,8 @@ class HomeScreen extends ConsumerWidget {
                   TextButton(
                     onPressed: () {},
                     child: Text('Бүгд',
-                        style: AppTextStyles.labelMedium.copyWith(
-                            color: AppColors.primary)),
+                        style: AppTextStyles.labelMedium
+                            .copyWith(color: AppColors.primary)),
                   ),
                 ],
               ),
@@ -198,7 +268,7 @@ class HomeScreen extends ConsumerWidget {
               }
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
-                      (context, index) {
+                  (context, index) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
@@ -222,13 +292,13 @@ class HomeScreen extends ConsumerWidget {
               child: Column(
                 children: List.generate(
                   4,
-                      (i) => Padding(
+                  (i) => Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 10),
                     child: Row(
                       children: [
-                        const _SkeletonBox(width: 44, height: 44,
-                            borderRadius: 12),
+                        const _SkeletonBox(
+                            width: 44, height: 44, borderRadius: 12),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -251,8 +321,8 @@ class HomeScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.all(40),
                 child: Text('Алдаа гарлаа',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(color: AppColors.textSecondary),
                     textAlign: TextAlign.center),
               ),
             ),

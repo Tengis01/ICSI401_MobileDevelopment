@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../app/router.dart';
@@ -43,8 +44,7 @@ class _BillReceiptScreenState extends State<BillReceiptScreen>
       duration: const Duration(milliseconds: 600),
     );
     _scaleAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _animController, curve: Curves.elasticOut),
+      CurvedAnimation(parent: _animController, curve: Curves.elasticOut),
     );
     _animController.forward();
   }
@@ -56,26 +56,49 @@ class _BillReceiptScreenState extends State<BillReceiptScreen>
   }
 
   String _fmt(int v) => v.toString().replaceAllMapped(
-    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
         (m) => '${m[1]},',
-  );
+      );
 
   // receipt QR encode hiih data
   String get _qrData => jsonEncode({
-    'type':      'fintrack_receipt',
-    'id':        widget.txId,
-    'amount':    widget.amount,
-    'service':   widget.serviceId,
-    'bank':      widget.bankName,
-    'card':      '****${widget.cardLast4}',
-    'date':      DateTime.now().toIso8601String(),
-    'app':       'FinTrack',
-  });
+        'type': 'financial_note_receipt',
+        'id': widget.txId,
+        'amount': widget.amount,
+        'service': widget.serviceId,
+        'bank': widget.bankName,
+        'card': '****${widget.cardLast4}',
+        'date': DateTime.now().toIso8601String(),
+        'app': 'Financial Note',
+      });
+
+  Future<void> _shareReceipt(String provider) async {
+    final receiptText = [
+      'Financial Note баримт',
+      'Хүлээн авагч: $provider',
+      'Гүйлгээний дугаар: ${widget.txId.substring(0, 8).toUpperCase()}',
+      'Дүн: ${_fmt(widget.amount)}₮',
+      'Хэтэвч: ${widget.bankName} • ${widget.cardLast4}',
+      'Огноо: ${DateFormatter.formatFull(DateTime.now())}',
+    ].join('\n');
+
+    await Clipboard.setData(ClipboardData(text: receiptText));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Баримтын мэдээлэл хууллаа'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bill = BillData.services
-        .firstWhere((s) => s.id == widget.serviceId);
+    final provider = widget.serviceId == 'all'
+        ? 'Бүх үйлчилгээ'
+        : BillData.services
+            .firstWhere((s) => s.id == widget.serviceId)
+            .provider;
     final now = DateTime.now();
 
     return Scaffold(
@@ -110,20 +133,21 @@ class _BillReceiptScreenState extends State<BillReceiptScreen>
                   ScaleTransition(
                     scale: _scaleAnim,
                     child: Container(
-                      width: 72, height: 72,
+                      width: 72,
+                      height: 72,
                       decoration: const BoxDecoration(
                         color: AppColors.success,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.check_rounded,
-                        color: Colors.white, size: 36,
+                        color: Colors.white,
+                        size: 36,
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text('Амжилттай шилжүүлэв',
-                      style: AppTextStyles.h3),
+                  Text('Амжилттай шилжүүлэв', style: AppTextStyles.h3),
                   const SizedBox(height: 8),
                   Text(
                     '${_fmt(widget.amount)}₮',
@@ -145,22 +169,18 @@ class _BillReceiptScreenState extends State<BillReceiptScreen>
               ),
               child: Column(
                 children: [
-                  _ReceiptRow(
-                      label: 'Хүлээн авагч',
-                      value: bill.provider),
+                  _ReceiptRow(label: 'Хүлээн авагч', value: provider),
                   const Divider(height: 1, indent: 16),
                   _ReceiptRow(
                       label: 'Гүйлгээний дугаар',
                       value: widget.txId.substring(0, 8).toUpperCase()),
                   const Divider(height: 1, indent: 16),
                   _ReceiptRow(
-                      label: 'Огноо',
-                      value: DateFormatter.formatFull(now)),
+                      label: 'Огноо', value: DateFormatter.formatFull(now)),
                   const Divider(height: 1, indent: 16),
                   _ReceiptRow(
                       label: 'Хэтэвч',
-                      value:
-                      '${widget.bankName} • ${widget.cardLast4}'),
+                      value: '${widget.bankName} • ${widget.cardLast4}'),
                   const Divider(height: 1, indent: 16),
                   _ReceiptRow(
                       label: 'Шимтгэл',
@@ -173,25 +193,22 @@ class _BillReceiptScreenState extends State<BillReceiptScreen>
                       isBold: true),
                   // delgerengui expand
                   InkWell(
-                    onTap: () =>
-                        setState(() => _isExpanded = !_isExpanded),
+                    onTap: () => setState(() => _isExpanded = !_isExpanded),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
                       child: Row(
-                        mainAxisAlignment:
-                        MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             _isExpanded ? 'Хураах' : 'Дэлгэрэнгүй',
-                            style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.primary),
+                            style: AppTextStyles.labelMedium
+                                .copyWith(color: AppColors.primary),
                           ),
                           const SizedBox(width: 4),
                           AnimatedRotation(
                             turns: _isExpanded ? 0.5 : 0,
-                            duration:
-                            const Duration(milliseconds: 200),
+                            duration: const Duration(milliseconds: 200),
                             child: Icon(
                               Icons.keyboard_arrow_down_rounded,
                               color: AppColors.primary,
@@ -207,39 +224,37 @@ class _BillReceiptScreenState extends State<BillReceiptScreen>
                     curve: Curves.easeInOut,
                     child: _isExpanded
                         ? Column(
-                      children: [
-                        const Divider(height: 1),
-                        Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
                             children: [
-                              Text('FinTrack баримт',
-                                  style: AppTextStyles.labelLarge),
-                              Text(
-                                DateFormatter.formatFull(now),
-                                style: AppTextStyles.bodySmall,
-                              ),
-                              const SizedBox(height: 16),
-                              // qr_flutter - auto generate
-                              QrImageView(
-                                data: _qrData,
-                                version: QrVersions.auto,
-                                size: 160,
-                                backgroundColor: Colors.white,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                widget.txId
-                                    .substring(0, 8)
-                                    .toUpperCase(),
-                                style: AppTextStyles.bodySmall
-                                    .copyWith(fontSize: 10),
+                              const Divider(height: 1),
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Column(
+                                  children: [
+                                    Text('Financial Note баримт',
+                                        style: AppTextStyles.labelLarge),
+                                    Text(
+                                      DateFormatter.formatFull(now),
+                                      style: AppTextStyles.bodySmall,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // qr_flutter - auto generate
+                                    QrImageView(
+                                      data: _qrData,
+                                      version: QrVersions.auto,
+                                      size: 160,
+                                      backgroundColor: Colors.white,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      widget.txId.substring(0, 8).toUpperCase(),
+                                      style: AppTextStyles.bodySmall
+                                          .copyWith(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
-                          ),
-                        ),
-                      ],
-                    )
+                          )
                         : const SizedBox.shrink(),
                   ),
                 ],
@@ -251,7 +266,7 @@ class _BillReceiptScreenState extends State<BillReceiptScreen>
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _shareReceipt(provider),
                     icon: const Icon(Icons.share_outlined, size: 18),
                     label: const Text('Хуваалцах'),
                     style: OutlinedButton.styleFrom(
@@ -296,20 +311,17 @@ class _ReceiptRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary)),
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.textSecondary)),
           Text(value,
               style: AppTextStyles.labelMedium.copyWith(
                 color: valueColor ?? AppColors.textPrimary,
-                fontWeight: isBold
-                    ? FontWeight.w700
-                    : FontWeight.w500,
+                fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
               )),
         ],
       ),

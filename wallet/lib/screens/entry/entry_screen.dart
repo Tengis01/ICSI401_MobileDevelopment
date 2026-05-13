@@ -9,6 +9,7 @@ import '../../core/constants/app_constants.dart';
 import '../../models/category_model.dart';
 import '../../models/transaction_model.dart';
 import '../../providers/transaction_provider.dart';
+import '../../services/app_notification_service.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/app_button.dart';
 import 'widgets/amount_input.dart';
@@ -83,6 +84,16 @@ class _EntryScreenState extends ConsumerState<EntryScreen> {
         categoryName: _selectedCategory!.name,
         amount: int.parse(_amountController.text),
         isIncome: _type == TransactionType.income,
+      );
+
+      await AppNotificationService.instance.addNotification(
+        title: _type == TransactionType.income
+            ? 'Орлого бүртгэгдлээ'
+            : 'Зарлага бүртгэгдлээ',
+        body: '${_selectedCategory!.name} · ${_amountController.text}₮',
+        type: _type == TransactionType.income
+            ? AppNotificationType.income
+            : AppNotificationType.expense,
       );
 
       if (!mounted) return;
