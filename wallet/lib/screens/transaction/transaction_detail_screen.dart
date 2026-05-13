@@ -242,7 +242,15 @@ class _DetailRow extends StatelessWidget {
               style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary)),
           const Spacer(),
-          Text(value, style: AppTextStyles.labelMedium),
+          Flexible(
+            child: Text(
+              value,
+              style: AppTextStyles.labelMedium,
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
